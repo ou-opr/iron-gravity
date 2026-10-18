@@ -1,0 +1,22 @@
+# 铁引力 · IRON GRAVITY —— 版本控制忽略项
+
+# 第三方审计库（tools/a11y-audit.sh 缺库时会自动下载 axe-core 4.10.2）
+tools/axe.min.js
+
+# 检查器生成物（每次 node tools/check-links.mjs 都会重写）
+tools/link-report.json
+tools/a11y-report.json
+
+# 系统与编辑器垃圾
+Thumbs.db
+desktop.ini
+.DS_Store
+*.tmp
+~$*
+
+# 过程截图（1.0.0 起不再入库）：README 只用 3 张，其余 99 张留在磁盘但不进版本库。
+# 这样每次评审往目录里丢几十张中间产物，仓库也不会再变大。
+docs/screenshots/*
+!docs/screenshots/v16-home.webp
+!docs/screenshots/v16-exercises.webp
+!docs/screenshots/v16-evidence.webp

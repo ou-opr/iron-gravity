@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>铁引力 · 冒烟测试（工具页）</title>
+<style>body{font:13px/1.6 Consolas,monospace;background:#0a0b10;color:#e9ecf4;margin:0;padding:14px}
+#out{white-space:pre-wrap}
+iframe{width:1100px;height:600px;border:1px solid #333;margin:8px 0;opacity:.25}</style>
+</head>
+<body>
+<div id="out">RUNNING（等待 iframe 加载…）</div>
+<iframe id="f" src="../log.html"></iframe>
+<script>
+/* 说明：这是自带的端到端冒烟测试。用 --allow-file-access-from-files 打开本页时，
+   它会在 iframe 里加载真实页面、模拟真实点击，并把 PASS/FAIL 结果写进本页 DOM，
+   便于用 `chrome --headless --dump-dom` 一次性读取结果。
+   为了可以重复运行，先清掉本站自己的存储键（不会动其他数据）。 */
+["ig_log_sessions", "ig_fav_exercises", "ig_fav_creators", "ig_nutrition_target", "ig_body", "ig_theme", "ig_custom_plans"].forEach(function (k) {
+  try { localStorage.removeItem(k); } catch (e) {}
+});
+
+var log = [];
+function step(name, ok, extra) { log.push((ok ? "PASS" : "FAIL") + " | " + name + (extra ? " | " + extra : "")); }
+function report() {
+  var fail = log.filter(function (x) { return x.indexOf("FAIL") === 0; }).length;
+  document.getElementById("out").textContent = log.join("\n") + "\n\n===== 合计 " + log.length + " 项，失败 " + fail + " 项 =====";
+}
+function tryStep(name, fn) { try { fn(); } catch (e) { step(name, false, "异常: " + e.message); } }
+
+function loadPage(url, cb) {
+  var old = document.getElementById("f");
+  var nf = document.createElement("iframe");
+  nf.id = "f"; nf.src = url;
+  nf.onload = function () { setTimeout(function () { cb(nf.contentWindow, nf.contentDocument); }, 900); };
+  old.parentNode.replaceChild(nf, old);
+}
+
+window.addEventListener("load", function () {
+  setTimeout(function () { testLog(); }, 1500);
+});
+
+function testLog() {
+  loadPage("../log.html", function (w, d) {
+    var $ = function (s) { return d.querySelector(s); };
+    var $$ = function (s) { return Array.prototype.slice.call(d.querySelectorAll(s)); };
+    var lsOk = (function () { try { w.localStorage.setItem("__smoke", "1"); var v = w.localStorage.getItem("__smoke") === "1"; w.localStorage.removeItem("__smoke"); return v; } catch (e) { return false; } })();
+    step("本地存储可用", lsOk, "直接读写探针");
+    step("日志页已初始化（动作块 > 0）", $$(".lgitem").length > 0, $$(".lgitem").length + " 个动作块");
+    step("每组默认 3 行输入", $$(".setrow").length === $$(".lgitem").length * 3, $$(".setrow").length + " 行");
+    step("计划下拉 6 项", $("#lgPlan") && $("#lgPlan").options.length === 6, $("#lgPlan") ? $("#lgPlan").options.length + " 项" : "无");
+    step("历史初始为空态", $("#lgHistory") && $("#lgHistory").textContent.indexOf("还没有记录") > -1);
+    tryStep("填写并保存一次训练", function () {
+      var box = $(".lgitem");
+      var wi = box.querySelector(".w"), ri = box.querySelector(".r");
+      wi.value = "60"; ri.value = "10";
+      wi.dispatchEvent(new w.Event("input", { bubbles: true }));
+      step("实时合计更新", $("#lgSummary").textContent.indexOf("600") > -1, $("#lgSummary").textContent.slice(0, 50));
+      $("#lgSave").click();
+      step("历史出现 1 条记录", $$(".hist").length === 1, $$(".hist").length + " 条");
+      step("记录里保存了重量×次数", $("#lgHistory").textContent.indexOf("60×10") > -1);
+      var raw = w.localStorage.getItem("ig_log_sessions") || "";
+      step("数据确实写进 localStorage", raw.indexOf("60") > -1, raw.length + " 字符");
+      var box2 = $(".lgitem");
+      box2.querySelector(".w").value = "65";
+      box2.querySelector(".r").value = "8";
+      $("#lgSave").click();
+      step("第二次保存成功（为折线图提供第 2 个点）", $$(".hist").length === 2, $$(".hist").length + " 条");
+      var raw2 = w.localStorage.getItem("ig_log_sessions") || "";
+      step("两条记录都在库里", raw2.indexOf("65") > -1, raw2.length + " 字符");
+    });
+    /* v16 新增：上次记录提示 + 一键沿用 */
+    tryStep("上次记录提示与沿用", function () {
+      var lb = $(".lgitem .lastbar");
+      step("出现「上次」提示条", !!lb, lb ? lb.textContent.replace(/\s+/g, " ").slice(0, 42) : "无");
+      var btn = $(".lgitem .uselast");
+      step("有「沿用上次」按钮", !!btn);
+      if (btn) {
+        var before = $(".lgitem .setrow .w").value;
+        btn.click();
+        var after = $(".lgitem .setrow .w").value;
+        step("沿用后填入上次重量（65）", after === "65", "点击前「" + before + "」→ 点击后「" + after + "」");
+      }
+    });
+    tryStep("1RM 计算器", function () {
+      $("#rmLift").value = "100"; $("#rmReps").value = "5";
+      $("#rmLift").dispatchEvent(new w.Event("input", { bubbles: true }));
+      step("1RM 输出正确（100×5 ≈ 116.7）", $("#rmOut").textContent.indexOf("116.7") > -1, $("#rmOut").textContent.slice(0, 40));
+    });
+    /* v16 新增：组间休息计时器 */
+    tryStep("组间休息计时器", function () {
+      var chips = $$("#restBox [data-rest]");
+      step("预设 4 档", chips.length === 4, chips.length + " 档");
+      if (chips.length) {
+        chips[0].click();
+        step("选 60 秒后显示 1:00", $("#restTime").textContent === "1:00", $("#restTime").textContent);
+        $("#restStart").click();
+        step("开始后按钮变「停止」", $("#restStart").textContent === "停止", $("#restStart").textContent);
+        $("#restStart").click();
+        step("停止后恢复「开始」", $("#restStart").textContent === "开始", $("#restStart").textContent);
+      }
+    });
+    tryStep("容量核算器", function () {
+      $("#volSets").value = "6";
+      for (var i = 0; i < 3; i++) { $("#volEx").selectedIndex = i; $("#volAdd").click(); }
+      step("容量汇总卡片出现", $$(".vol").length > 0, $$(".vol").length + " 张卡");
+      step("给出区间提示", $("#volTotals").textContent.indexOf("组") > -1, $("#volTotals").textContent.replace(/\s+/g, " ").slice(0, 60));
+    });
+    tryStep("体测记录与体重趋势", function () {
+      $("#bwDate").value = "2026-10-08"; $("#bwW").value = "65.0"; $("#bwAdd").click();
+      $("#bwDate").value = "2026-10-15"; $("#bwW").value = "64.4"; $("#bwAdd").click();
+      step("体测两条入库", $("#bwList").textContent.indexOf("体重 65") > -1 && $("#bwList").textContent.indexOf("64.4") > -1);
+      step("体重趋势点数正确", $$("#trBw circle").length === 2, $$("#trBw circle").length + " 点");
+    });
+    tryStep("近 8 周肌群容量", function () {
+      step("周容量按肌群出图", $$("#wkVol .wkrow").length > 0, $$("#wkVol .wkrow").length + " 个肌群");
+      step("本周有非零组数", /<em>[1-9]/.test($("#wkVol").innerHTML), $("#wkVol").textContent.replace(/\s+/g, " ").slice(0, 80));
+    });
+    /* v14 新增：数据生命周期（导出 → 清空）—— 此前 88 项断言全绿却漏掉这两处缺陷 */
+    tryStep("数据生命周期（导出 / 清空）", function () {
+      var before = w.localStorage.getItem("ig_log_sessions");
+      /* 1) 导出 payload 必须含自定义课表与体测 */
+      var captured = null, OB = w.Blob, oldCreate = w.URL.createObjectURL, oldClick = w.HTMLAnchorElement.prototype.click;
+      w.Blob = function (parts, o) { captured = parts && parts[0]; return new OB(parts, o); };
+      w.URL.createObjectURL = function () { return "blob:x"; };
+      w.HTMLAnchorElement.prototype.click = function () {};
+      w.localStorage.setItem("ig_custom_plans", JSON.stringify([{ id: "my-smoke", name: "副本", schedule: [] }]));
+      $("#lgExport").click();
+      w.Blob = OB; w.URL.createObjectURL = oldCreate; w.HTMLAnchorElement.prototype.click = oldClick;
+      var js = {};
+      try { js = captured ? JSON.parse(captured) : {}; } catch (e) { js = {}; }
+      step("导出备份含自定义课表与体测",
+        !!(js.customs && js.customs.length) && !!(js.body && js.body.length),
+        "键：" + Object.keys(js).join(","));
+      w.localStorage.removeItem("ig_custom_plans");
+      /* 2) 清空后容量图与月历必须同步清空（alert/confirm 都要先接管，否则无头浏览器会挂在对话框上） */
+      var oc = w.confirm, oa = w.alert;
+      w.confirm = function () { return true; };
+      w.alert = function () {};
+      $("#lgWipe").click();
+      w.confirm = oc; w.alert = oa;
+      var rows = $$("#wkVol .wkrow").length, lit = $$("#calGrid .d.has").length;
+      step("清空后容量图与月历不残留", rows === 0 && lit === 0, "wkrow=" + rows + " lit=" + lit);
+      /* 还原训练记录：后续 plans 页的打卡断言依赖这 2 条数据 */
+      if (before) w.localStorage.setItem("ig_log_sessions", before);
+    });
+    testExercises();
+  });
+}
+
+function testExercises() {
+  loadPage("../exercises.html", function (w, d) {
+    var $$ = function (s) { return Array.prototype.slice.call(d.querySelectorAll(s)); };
+    function $(s) { return d.querySelector(s); }
+    step("动作卡渲染 60 张", $$(".excard").length === 60, $$(".excard").length + " 张");
+    step("排序/收藏控件已注入", !!$("#exSort") && !!$("#exFavChip"));
+    step("肌群筛选行已注入（8 档）", $$("#fMus .chip").length === 8, $$("#fMus .chip").length + " 档");
+    tryStep("收藏一个动作", function () {
+      var fav = $(".excard .fav");
+      fav.click();
+      var key = w.localStorage.getItem("ig_fav_exercises") || "";
+      step("收藏写入 localStorage", key.length > 2, key);
+      step("星标变成已选中", $(".excard .fav").classList.contains("on"));
+    });
+    tryStep("只看收藏过滤", function () {
+      $("#exFavChip").click();
+      step("过滤后只剩收藏项", $$(".excard").length === 1, $$(".excard").length + " 张");
+      $("#exFavChip").click();
+      step("取消过滤恢复全部", $$(".excard").length === 60, $$(".excard").length + " 张");
+    });
+    tryStep("排序可用", function () {
+      $("#exSort").value = "level";
+      $("#exSort").dispatchEvent(new w.Event("change", { bubbles: true }));
+      var first = $(".excard .lv");
+      step("按难度排序后首项为「入门」", first && first.textContent.indexOf("入门") > -1, first ? first.textContent : "无");
+      $("#exSort").value = "default";
+      $("#exSort").dispatchEvent(new w.Event("change", { bubbles: true }));
+    });
+    step("动作线稿图示已注入", !!$(".excard .art svg") && $$(".excard .art svg").length >= 2, $$(".excard .art svg").length + " 张");
+    /* v14 新增：键盘路径（此前 Enter/Space 完全无效，且 role=button 内嵌收藏按钮） */
+    tryStep("动作卡键盘可达", function () {
+      var hit = $(".excard .hit"), card = $(".excard");
+      step("命中区是原生 button", !!hit && hit.tagName === "BUTTON", hit ? hit.tagName : "无");
+      step("卡片不再是伪按钮（无 role/tabindex）", !card.getAttribute("role") && !card.getAttribute("tabindex"));
+      hit.focus();
+      hit.click();
+      var ov = d.getElementById("overlay");
+      step("激活后打开动作弹窗", !!ov && ov.classList.contains("open"));
+      if (ov && ov.querySelector(".x")) ov.querySelector(".x").click();
+    });
+    step("练前热身序列 8 条", $$("#warmGrid .wrow").length === 8, $$("#warmGrid .wrow").length + " 条");
+    testEvidence();
+  });
+}
+
+/* v15 新增：证据页与「注意人群」——内容证据链的最小回归 */
+function testEvidence() {
+  loadPage("../evidence.html", function (w, d) {
+    var $ = function (s) { return d.querySelector(s); };
+    var $$ = function (s) { return Array.prototype.slice.call(d.querySelectorAll(s)); };
+    step("证据页主张卡 8 条", $$(".evclaim").length === 8, $$(".evclaim").length + " 条");
+    step("证据页文献 11 条", $$(".evrefs li").length === 11, $$(".evrefs li").length + " 条");
+    step("证据等级图例 3 档", $$(".evlv").length === 3, $$(".evlv").length + " 档");
+    var noRef = $$(".evclaim").filter(function (c) { return !c.querySelector('a[href^="#ref-"]'); });
+    step("每条主张都挂了文献锚点", noRef.length === 0, noRef.length + " 条缺依据");
+    var pm = $$('.evrefs a[href^="https://pubmed.ncbi.nlm.nih.gov/"]');
+    step("PubMed 链接均为绝对地址", pm.length === 11, pm.length + " 条");
+    loadPage("../detail.html?id=bench-press", function (w2, d2) {
+      var txt = d2.body.textContent;
+      step("详情页显示「注意人群」", txt.indexOf("注意人群") > -1);
+      step("详情页挂到证据页锚点", !!d2.querySelector('a[href="evidence.html#claim-volume"]'));
+      step("每个动作都有 B站搜索直达", !!d2.querySelector('.videolink a[href*="search.bilibili.com"]'));
+      step("卧推也挂到 YouTube 教学视频", d2.querySelectorAll('.videolink a[href*="youtube.com"]').length >= 1);
+      step("60 个动作全部有教学视频", Object.keys(w2.IG_EX_VIDEO || {}).length === 60, Object.keys(w2.IG_EX_VIDEO || {}).length + " 个");
+      loadPage("../detail.html?id=squat", function (w3, d3) {
+        var yt = d3.querySelectorAll('.videolink a[href*="youtube.com"]').length;
+        step("深蹲详情页挂到 YouTube 教学视频", yt >= 1, yt + " 条");
+        var reg = d3.querySelectorAll(".regrow .chip").length;
+        step("深蹲有退阶路径（≥2 级可点）", reg >= 2, reg + " 级");
+        testPlans();
+      });
+    });
+  });
+}
+
+function testPlans() {
+  loadPage("../plans.html", function (w, d) {
+    var $ = function (s) { return d.querySelector(s); };
+    var $$ = function (s) { return Array.prototype.slice.call(d.querySelectorAll(s)); };
+    step("计划标签渲染 6 项", $$("#planTabs .chip").length === 6, $$("#planTabs .chip").length + " 个");
+    step("打卡区块已渲染", !!$(".stampwrap"));
+    step("打卡计数由日志统计（2 次）", $$(".stamp.on").length > 0 && $(".stampwrap").textContent.indexOf("2 次") > -1, $$(".stamp.on").length + " 个亮格");
+    step("每节训练有「开始这节」入口", $$("#planBody .execgo").length >= 2, $$("#planBody .execgo").length + " 个");
+    /* —— 我的课表流程（v7）：用 ?noconfirm=1 让删除可测且不留 dialog —— */
+    loadPage("../plans.html?noconfirm=1", function (w2, d2) {
+      var $$2 = function (s) { return Array.prototype.slice.call(d2.querySelectorAll(s)); };
+      var $q = function (s) { return d2.querySelector(s); };
+      try {
+        $$2('#planBody [data-planact="clone"]')[0].click();
+        step("克隆出我的课表（标签变 7）", $$2("#planTabs .chip").length === 7, $$2("#planTabs .chip").length + " 项");
+        step("自定义视图带「我的课表」标记", $q("#planBody").textContent.indexOf("我的课表") > -1);
+        step("组次可就地编辑（data-edi 锚点）", $$2("#planBody [data-edi]").length > 0, $$2("#planBody [data-edi]").length + " 处");
+        $$2('#planBody [data-planact="delplan"]')[0].click();
+        step("删除后回到 6 项且无残留", $$2("#planTabs .chip").length === 6 && (w2.localStorage.getItem("ig_custom_plans") || "[]").indexOf("my-") < 0, $$2("#planTabs .chip").length + " 项");
+      } catch (err) { step("我的课表流程", false, "异常: " + err.message); }
+      testNutrition();
+    });
+  });
+}
+
+function testNutrition() {
+  loadPage("../nutrition.html", function (w, d) {
+    var $ = function (s) { return d.querySelector(s); };
+    var $$ = function (s) { return Array.prototype.slice.call(d.querySelectorAll(s)); };
+    step("计算器已输出结果", $("#calcRes") && $("#calcRes").textContent.indexOf("目标每日热量") > -1);
+    step("宏量环形图已渲染（SVG）", $("#calcRes") && $("#calcRes").querySelectorAll("svg").length > 0);
+    step("食物表含份量锚点列", $("#foodRows") && $("#foodRows").textContent.indexOf("1 个 ≈ 50g") > -1);
+    tryStep("食谱生成器", function () {
+      $("#genBtn").click();
+      step("三餐已生成且可重掷", $$("#genOut .genm").length === 3 && $("#genOut").textContent.indexOf("kcal") > -1, $$("#genOut .genm").length + " 餐");
+    });
+    tryStep("保存饮食目标", function () {
+      var btn = d.querySelector("#calcRes button");
+      btn.click();
+      var raw = w.localStorage.getItem("ig_nutrition_target") || "";
+      step("目标写入 localStorage", raw.indexOf("weight") > -1, raw.slice(0, 60));
+    });
+    testGlossary();
+  });
+}
+
+function testGlossary() {
+  loadPage("../glossary.html", function (w, d) {
+    var $ = function (s) { return d.querySelector(s); };
+    var $$ = function (s) { return Array.prototype.slice.call(d.querySelectorAll(s)); };
+    step("术语卡渲染 31 张", $$(".gl").length === 31, $$(".gl").length + " 张");
+    step("FAQ 渲染 12 条", $$("details.faq").length === 12, $$("details.faq").length + " 条");
+    tryStep("分类筛选可用", function () {
+      $$("#glCats .chip")[1].click();          // 点击后分类芯片会重新渲染，必须重新查询节点
+      var afterCat = $$(".gl").length;
+      step("筛选后数量减少", afterCat > 0 && afterCat < 31, afterCat + " 张（当前分类：" + ($("#glCats .chip.on") ? $("#glCats .chip.on").textContent : "?") + "）");
+      $$("#glCats .chip")[0].click();
+      step("回到全部恢复 31", $$(".gl").length === 31, $$(".gl").length + " 张");
+    });
+    tryStep("术语搜索可用", function () {
+      var s = $("#glSearch");
+      s.value = "RIR";
+      s.dispatchEvent(new w.Event("input", { bubbles: true }));
+      step("搜索 RIR 命中", $$(".gl").length >= 1 && $$(".gl").length < 31, $$(".gl").length + " 张");
+    });
+    testTrend();
+  });
+}
+
+function testTrend() {
+  loadPage("../log.html", function (w, d) {
+    var $ = function (s) { return d.querySelector(s); };
+    var $$ = function (s) { return Array.prototype.slice.call(d.querySelectorAll(s)); };
+    step("总容量折线图已渲染", !!$("#trVol svg") && $$("#trVol circle").length >= 2, $$("#trVol circle").length + " 个点");
+    step("1RM 动作下拉已填充", $("#trEx") && $("#trEx").options.length > 0, $("#trEx") ? $("#trEx").options.length + " 项" : "无");
+    step("1RM 折线图已渲染", !!$("#trRm svg"));
+    step("打印版周报生成（小结+两张表）", (function () {
+      if (!w.__igBuildReport) return false;
+      w.__igBuildReport();
+      var pr = $("#printReport");
+      return pr && pr.textContent.indexOf("本周小结") > -1 && pr.textContent.indexOf("肌群周容量") > -1 && pr.querySelectorAll("table tr").length >= 4;
+    })(), $("#printReport") ? $("#printReport").querySelectorAll("table tr").length + " 行" : "无");
+    step("月历网格完整（≥28 格）", $$("#calGrid .d").length >= 28, $$("#calGrid .d").length + " 格");
+    step("月历亮起今天的训练", $$("#calGrid .d.has").length >= 1 && $$("#calGrid .d.today").length === 1, $$("#calGrid .d.has").length + " 天亮起");
+    tryStep("浅色/深色切换", function () {
+      var btn = $("#themeBtn");
+      step("主题按钮已注入", !!btn);
+      var before = d.body.classList.contains("light");
+      btn.click();
+      step("body.light 切换生效", d.body.classList.contains("light") !== before);
+      var saved = w.localStorage.getItem("ig_theme") || "";
+      step("主题已持久化", saved.length > 2, saved);
+      btn.click();
+      /* 断言「切回」而不是「切回深色」：CI（Ubuntu）默认浅色，写死深色会假失败 */
+      step("可切回原主题", d.body.classList.contains("light") === before);
+    });
+    testDetail();
+  });
+}
+
+function testDetail() {
+  loadPage("../detail.html?id=bench-press", function (w, d) {
+    var $ = function (s) { return d.querySelector(s); };
+    var $$ = function (s) { return Array.prototype.slice.call(d.querySelectorAll(s)); };
+    step("详情页渲染动作名（页头标题）", $("#dTitle") && $("#dTitle").textContent.indexOf("杠铃卧推") > -1, $("#dTitle") ? $("#dTitle").textContent : "无");
+    step("要点/错误列表渲染", $$("#dBody .mbox li").length >= 5, $$("#dBody .mbox li").length + " 条");
+    step("替代动作链接可用", $$("#dBody a[href*='detail.html?id=']").length >= 2, $$("#dBody a[href*='detail.html?id=']").length + " 个");
+    step("页面标题已更新", d.title.indexOf("杠铃卧推") > -1, d.title);
+    loadPage("../detail.html", function (w2, d2) {
+      step("无 id 时显示完整动作选择器", d2.querySelectorAll("#dBody .gl").length === 60, d2.querySelectorAll("#dBody .gl").length + " 张");
+      loadPage("../detail.html?id=db-shoulder-press", function (w3, d3) {
+        step("plc 图层接入（两帧+面板）", !!d3.querySelector('.plc') && !!d3.querySelector('.plc .blk'), d3.querySelectorAll('.plc .blk').length + " 块");
+        step("默认面板 = atlas（肌群级）", !!d3.querySelector(".plc .atlas2"), "atlas2=" + !!d3.querySelector(".plc .atlas2"));
+        step("图例可点（链到动作库肌群筛选）", d3.querySelectorAll(".aleg a.mlk").length >= 2, d3.querySelectorAll(".aleg a.mlk").length + " 个");
+        step("同肌群动作推荐（≥3 条）", d3.querySelectorAll(".relrow .rchip").length >= 3, d3.querySelectorAll(".relrow .rchip").length + " 条");
+        step("导出说明牌 SVG 按钮在位", !!d3.querySelector("#plcExport"));
+        step("导出函数可用（3 个 SVG 可序列化）", typeof w3.exportPlacardSVG === "function" && d3.querySelectorAll(".plc svg:not(.wt)").length === 3, d3.querySelectorAll(".plc svg:not(.wt)").length + " 个 SVG");
+        step("默认不启用擦拭对比（双帧并排）", !d3.querySelector("#plcWipe"), "");
+        loadPage("../detail.html?id=db-shoulder-press&panel=part", function (w4, d4) {
+          step("panel=part 回退部位级（atlas 不挂）", !!d4.querySelector(".plc") && !d4.querySelector(".atlas2"), "atlas2=" + !!d4.querySelector(".atlas2"));
+          loadPage("../detail.html?id=bench-press&placard=0", function (w5, d5) {
+            step("placard=0 兜底回退剪影层", !!d5.querySelector(".art.big") && !d5.querySelector(".plc"), "art big=" + !!d5.querySelector(".art.big"));
+            loadPage("../detail.html?id=bench-press&art=ai", function (w6, d6) {
+              step("art=ai 已无效（AI 层已删）", !d6.querySelector("img.aiart") && !!d6.querySelector(".plc .blk"), "aiart=" + !!d6.querySelector("img.aiart"));
+              loadPage("../exercises.html?muscle=胸", function (w7, d7) {
+                var n7 = d7.querySelectorAll(".excard").length;
+                step("?muscle=胸 过滤生效（0 < n < 60）", n7 > 0 && n7 < 60, n7 + " 张");
+                loadPage("../exercises.html?muscle=小腿", function (w8, d8) {
+                  var n8 = d8.querySelectorAll(".excard").length;
+                  step("?muscle=小腿 过滤生效", n8 > 0 && n8 < 60, n8 + " 张");
+                  /* ---- 外部评审回归（P0/P1）---- */
+                  loadPage("../log.html", function (wL, dL) {
+                    var accFill = wL.getComputedStyle(dL.documentElement).getPropertyValue("--acc-fill").trim();
+                    step("P0 修复：--acc-fill 深色主题可解析", accFill.length > 0, accFill || "(空)");
+                    var stamp = dL.createElement("span"); stamp.className = "stamp on"; dL.body.appendChild(stamp);
+                    var bg = wL.getComputedStyle(stamp).backgroundColor;
+                    step("P0 修复：打卡印章深色下有填充色", bg !== "rgba(0, 0, 0, 0)" && bg !== "transparent", bg);
+                    var cal = dL.createElement("div"); cal.className = "cal";
+                    var dd = dL.createElement("div"); dd.className = "d has"; cal.appendChild(dd);
+                    var dt = dL.createElement("div"); dt.className = "d today"; cal.appendChild(dt);
+                    dL.body.appendChild(cal);
+                    var bc = wL.getComputedStyle(dd).borderColor, sh = wL.getComputedStyle(dt).boxShadow;
+                    /* 颜色值随主题变（深色 #c6ff3d / 浅色 #c9f53d），断言要验「描边可见」而不是某个具体色值 */
+                    var bw = parseFloat(wL.getComputedStyle(dd).borderTopWidth) || 0;
+                    var bgc = wL.getComputedStyle(dd).backgroundColor;
+                    step("P0 修复：日历'练过'描边 + '今天'双圈生效", bw > 0 && bc !== bgc && sh !== "none", bc + " / " + (sh === "none" ? "none" : "有"));
+                    stamp.remove(); cal.remove();
+                    loadPage("../glossary.html", function (wG, dG) {
+                      var ld = dG.querySelector('script[type="application/ld+json"]');
+                      var okLd = false, n = 0;
+                      try { var j = JSON.parse(ld.textContent); n = (j.mainEntity || []).length; okLd = j["@type"] === "FAQPage" && n >= 10; } catch (e) {}
+                      step("P2 修复：术语页 JSON-LD（FAQPage ≥10 问）", okLd, n + " 问");
+                      loadPage("../index.html", function (wH, dH) {
+                        var ldh = dH.querySelector('script[type="application/ld+json"]');
+                        var okH = false;
+                        try { okH = JSON.parse(ldh.textContent)["@type"] === "WebSite"; } catch (e) {}
+                        step("P2 修复：首页 JSON-LD（WebSite）", okH, "");
+                        var units = [], dup = false;
+                        ["stVideos", "stTerms", "stFaq"].forEach(function (id) {
+                          var v = dH.getElementById(id).textContent, k = dH.getElementById(id).nextElementSibling.textContent;
+                          if (/^\s*条/.test(k) || /^\s*问/.test(k)) dup = true;
+                          units.push(v + " | " + k);
+                        });
+                        step("P1 修复：首页统计单位不重复", !dup, units.join(" ; "));
+                        /* ---- v12：无障碍与代码质量回归 ---- */
+                        step("v12：首页跳过链接 + #main 锚点", !!dH.querySelector("a.skip") && !!dH.querySelector("#main"), "");
+                        var cur = dH.querySelector('.nav a[aria-current="page"]');
+                        step("v12：导航 aria-current=page", !!cur, cur ? cur.textContent : "(无)");
+                        step("v12：图标 svg 已 aria-hidden（≥6）", dH.querySelectorAll('svg[aria-hidden="true"]').length >= 6, dH.querySelectorAll('svg[aria-hidden="true"]').length + " 个");
+                        step("v12：卡片元信息行 .metarow 生效", dH.querySelectorAll(".metarow").length >= 1, dH.querySelectorAll(".metarow").length + " 处");
+                        var tb = dH.getElementById("themeBtn");
+                        step("v12：主题按钮 aria-pressed 有值", !!tb && (tb.getAttribute("aria-pressed") === "true" || tb.getAttribute("aria-pressed") === "false"), tb ? tb.getAttribute("aria-pressed") : "(无按钮)");
+                        loadPage("../muscles.html", function (wM, dM) {
+                          step("v12：肌群页跳过链接 + #main 锚点", !!dM.querySelector("a.skip") && !!dM.querySelector("#main"), "");
+                          step("v12：nav 有 aria-label", !!dM.querySelector('nav[aria-label]'), "");
+                          loadPage("../detail.html?id=squat", function (wD, dD) {
+                            var sub = dD.getElementById("dSub");
+                            step("v12：详情页副标题 aria-live", !!sub && sub.getAttribute("aria-live") === "polite", "");
+                            var tb2 = dD.getElementById("themeBtn");
+                            step("v12：详情页主题按钮 aria-pressed", !!tb2 && tb2.getAttribute("aria-pressed") !== null, "");
+                            report();
+                          });
+                        });
+                      });
+                    });
+                  });
+                });
+              });
+            });
+          });
+        });
+      });
+    });
+  });
+}
+</script>
+</body>
+</html>

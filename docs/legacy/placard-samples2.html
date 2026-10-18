@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>说明牌风格样板 v2（修版 + 参数化高亮）</title>
+<style>
+body{margin:0;padding:20px;background:#f4c81c;font:14px/1.6 "PingFang SC","Microsoft YaHei",sans-serif;color:#15181c}
+.wrap{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+.placard{width:400px}
+.blk{background:#121417;border-radius:16px;padding:10px;margin-bottom:8px}
+.blk svg{display:block;width:100%;height:auto}
+.cap{font-weight:700;font-size:13.5px;margin:2px 4px 6px}
+.note{font-size:12.5px;margin:0 4px 12px;color:#463c11}
+</style></head><body>
+<div class="wrap" id="wrap"></div>
+<script>
+/* —— 参数化部位高亮模板：按 parts 自动切换（胸/背/肩/腿/臀/手臂/核心/全身）—— */
+var HL = {
+  "胸":  { front:"M-11 -4q11 -6 22 0q-2 13 -11 16q-9 -3 -11 -16z M-16 -4l-7 12l8 2l5 -11z M16 -4l7 12l-8 2l-5 -11z", back:"M-14 -6q6 -3 12 0q-2 12 -6 15q-4 -3 -6 -15z M14 -6q-6 -3 -12 0q2 12 6 15q4 -3 6 -15z", side:"M-2 -6q9 -4 13 2q-1 11 -7 14q-6 -6 -6 -16z" },
+  "背":  { front:"", back:"M-13 -6q13 -6 26 0q-1 16 -8 24l-5 4l-5 -4q-7 -8 -8 -24z M-16 -8l-7 10l7 3l6 -9z M16 -8l7 10l-7 3l-6 -9z", side:"M2 -8q8 -2 10 6q-1 14 -6 20q-5 -6 -6 -14z" },
+  "肩":  { front:"M-17 -6l-7 13l9 3l6 -12z M17 -6l7 13l-9 3l-6 -12z M-8 -8l5 -3q3 1 3 5l-8 1z M8 -8l-5 -3q-3 1 -3 5l8 1z", back:"M-17 -6l-7 13l9 3l6 -12z M17 -6l7 13l-9 3l-6 -12z", side:"M-4 -8q10 -3 14 4q-2 10 -8 12q-6 -6 -6 -16z" },
+  "腿":  { front:"M-9 2l7 -2l1 26l-7 1z M9 2l-7 -2l-1 26l7 1z M-8 30l6 0l-1 22l-6 0z M8 30l-6 0l1 22l6 0z", back:"M-9 2l7 -2l1 26l-7 1z M9 2l-7 -2l-1 26l7 1z M-8 30l6 0l-1 22l-6 0z M8 30l-6 0l1 22l6 0z", side:"M-4 0q8 -2 9 4l-2 26l-6 1z M-3 32l6 0l1 20l-6 0z" },
+  "臀":  { front:"M-12 0q12 -4 24 0q-1 12 -12 12q-11 0 -12 -12z", back:"M-13 -2q13 -4 26 0q-1 14 -13 14q-12 0 -13 -14z M-13 12l13 -4l13 4l-3 8l-10 -3l-10 3z", side:"M-2 -4q8 -2 11 3q-1 10 -6 13q-5 -5 -5 -16z" },
+  "手臂":{ front:"M-18 -4l8 10l7 -3l-8 -11z M18 -4l-8 10l-7 -3l8 -11z", back:"M-18 -4l8 10l7 -3l-8 -11z M18 -4l-8 10l-7 -3l8 -11z", side:"M-2 -4q8 -2 9 4l-4 14l-7 -4z" },
+  "核心":{ front:"M-9 2h18q0 18 -9 20q-9 -2 -9 -20z", back:"M-9 2h18q0 16 -9 18q-9 -2 -9 -18z", side:"M-3 0q9 0 9 6l-3 16l-6 -2z" },
+  "全身":{ front:"M-14 -6q14 -6 28 0q-1 20 -9 26l-5 3l-5 -3q-8 -6 -9 -26z M-9 26l6 0l-1 24l-6 0z M9 26l-6 0l1 24l6 0z", back:"M-14 -6q14 -6 28 0q-1 20 -9 26l-5 3l-5 -3q-8 -6 -9 -26z M-9 26l6 0l-1 24l-6 0z M9 26l-6 0l1 24l6 0z", side:"M-2 -8q10 -4 13 4q-1 18 -7 24q-6 -6 -6 -28z" }
+};
+
+function anatomy(part) {
+  var h = HL[part] || HL["全身"];
+  function view(cx, kind, off) {
+    var body;
+    if (kind === "front") body = "M" + cx + " 34v40 M" + (cx - 15) + " 45h30 M" + (cx - 15) + " 45l-8 40 M" + (cx + 15) + " 45l8 40 M" + cx + " 74l-8 40 M" + cx + " 74l8 40 M" + (cx - 8) + " 115h-6 M" + (cx + 8) + " 115h6 M" + (cx - 6) + " 47q6 4 12 0 M" + (cx - 7) + " 58q7 4 14 0 M" + (cx - 4) + " 82q4 3 8 0";
+    else if (kind === "back") body = "M" + cx + " 34v40 M" + (cx - 15) + " 45h30 M" + (cx - 15) + " 45l-8 40 M" + (cx + 15) + " 45l8 40 M" + cx + " 74l-8 40 M" + cx + " 74l8 40 M" + (cx - 8) + " 115h-6 M" + (cx + 8) + " 115h6 M" + (cx - 7) + " 47q7 5 14 0 M" + (cx - 6) + " 60q6 4 12 0 M" + (cx - 10) + " 52l4 30 M" + (cx + 10) + " 52l-4 30";
+    else body = "M" + (cx + 2) + " 34q4 22 0 40 M" + (cx - 2) + " 44l10 34 M" + cx + " 74l-6 40 M" + cx + " 74l8 40 M" + (cx - 6) + " 114h-6 M" + (cx + 8) + " 114h6 M" + (cx + 4) + " 56q5 7 2 15";
+    return '<g fill="none" stroke="#eef1f4" stroke-width="1.9" stroke-linecap="round">'
+      + '<circle cx="' + cx + '" cy="26" r="8"/>' + '<path d="' + body + '"/></g>'
+      + '<g fill="rgba(217,58,43,.62)" transform="translate(' + cx + ',' + (kind === "side" ? 50 : 58) + ')">'
+      + '<path d="' + ((kind === "front" ? h.front : kind === "back" ? h.back : h.side) || "") + '"/></g>';
+  }
+  return '<svg viewBox="0 0 400 150" role="img" aria-label="肌肉三视图 部位级高亮：' + part + '">'
+    + view(66, "back") + view(200, "front") + view(330, "side") + "</svg>";
+}
+
+/* 样板 A：哑铃侧平举（肘微屈、手臂略前于冠状面） */
+var A = '<svg viewBox="0 0 400 230" role="img" aria-label="哑铃侧平举 两帧">'
+ + '<g fill="none" stroke="#eef1f4" stroke-width="2.2" stroke-linecap="round">'
+ + '<circle cx="96" cy="46" r="8"/><path d="M96 54v46M82 62h28M82 63l-10 40M110 63l10 40M96 100l-9 50M96 100l9 50M83 152h-8M105 152h8"/>'
+ + '<circle cx="68" cy="105" r="5"/><circle cx="126" cy="105" r="5"/>'
+ + '<circle cx="304" cy="46" r="8"/><path d="M304 54v46M290 62h28M290 62l-26 4l-12 -8M318 62l26 4l12 -8M304 100l-9 50M304 100l9 50M291 152h-8M313 152h8"/>'
+ + '<circle cx="250" cy="57" r="5"/><circle cx="358" cy="57" r="5"/>'
+ + '<path d="M40 162h120M250 162h120" stroke-width="1.6"/></g></svg>';
+
+/* 样板 B：坐姿绳索划船（补全 把手→拉索→滑轮→配重 链路） */
+var B = '<svg viewBox="0 0 400 230" role="img" aria-label="坐姿绳索划船 两帧">'
+ + '<g fill="none" stroke="#eef1f4" stroke-width="2.2" stroke-linecap="round">'
+ + '<g><path d="M26 40v150M26 190h92M42 190v-56"/><path d="M18 56h16M18 72h16M18 88h16M18 104h16M18 120h16"/>'
+ + '<path d="M26 52h30v-8h-30zM26 60l14 0"/><circle cx="56" cy="46" r="4.5"/><path d="M56 46l4 -6"/>'
+ + '<path d="M60 128h56v10h-56zM116 138v52M60 138v52M116 178h38"/></g>'
+ + '<g transform="translate(198,0)"><path d="M26 40v150M26 190h92M42 190v-56"/><path d="M18 56h16M18 72h16M18 88h16M18 104h16M18 120h16"/>'
+ + '<path d="M26 52h30v-8h-30zM26 60l14 0"/><circle cx="56" cy="46" r="4.5"/><path d="M56 46l4 -6"/>'
+ + '<path d="M60 128h56v10h-56zM116 138v52M60 138v52M116 178h38"/></g>'
+ + '<circle cx="92" cy="86" r="8"/><path d="M95 94l-4 34M92 128l22 -8M108 120l26 6M126 126l14 2M92 128l-6 26M88 154v22M112 130l6 24M118 154v22"/>'
+ + '<path d="M144 128l-24 -8l-46 -70" stroke-width="1.7"/><path d="M148 126h12" stroke-width="3"/>'
+ + '<g transform="translate(198,0)"><circle cx="92" cy="86" r="8"/><path d="M95 94l-4 34M92 128l22 -8M108 120l-10 14M98 134l-14 8M92 128l-6 26M88 154v22M112 130l6 24M118 154v22"/>'
+ + '<path d="M76 142l-40 -12l-8 -80" stroke-width="1.7"/><path d="M84 140h12" stroke-width="3"/></g></g></svg>';
+
+var out = [];
+out.push('<div class="placard"><div class="cap">样板 A（修版）· 哑铃侧平举 · A 档</div><div class="blk">' + A + '</div><div class="note">① 起始垂铃 ② 抬至肩高，肘微屈、手臂略偏前</div></div>');
+out.push('<div class="placard"><div class="cap">样板 B（修版）· 坐姿绳索划船 · C 档</div><div class="blk">' + B + '</div><div class="note">① 前伸握把 ② 拉向腹部；拉索→滑轮→配重链路已补，器械仍为简化示意</div></div>');
+["胸", "背", "肩", "腿"].forEach(function (p) {
+  out.push('<div class="placard"><div class="cap">样板 C · 解剖面板 · parts=\u300c' + p + '\u300d</div><div class="blk">' + anatomy(p) + '</div><div class="note">部位级高亮自动切换（背视图只保留该部位背面可见部分）</div></div>');
+});
+document.getElementById("wrap").innerHTML = out.join("");
+</script>
+</body></html>

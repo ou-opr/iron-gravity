@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>说明牌风格样板（A/B/C 三张）</title>
+<style>
+body{margin:0;padding:22px;background:#f4c81c;font:14px/1.6 "PingFang SC","Microsoft YaHei",sans-serif;color:#15181c}
+.wrap{display:flex;gap:22px;flex-wrap:wrap;justify-content:center}
+.placard{width:400px;background:#f4c81c}
+.blk{background:#121417;border-radius:16px;padding:10px;margin-bottom:10px}
+.blk svg{display:block;width:100%;height:auto}
+.cap{font-weight:700;font-size:13.5px;margin:2px 4px 6px}
+.note{font-size:12.5px;margin:0 4px 10px;color:#4a3f14}
+</style></head><body>
+<div class="wrap">
+
+<!-- 样板 A：哑铃侧平举（A 档·站姿族） -->
+<div class="placard">
+  <div class="cap">样板 A · 哑铃侧平举（A 档）</div>
+  <div class="blk"><svg viewBox="0 0 400 230" role="img" aria-label="哑铃侧平举 起始与完成两帧">
+    <g fill="none" stroke="#eef1f4" stroke-width="2.2" stroke-linecap="round">
+      <!-- 起始帧 -->
+      <circle cx="96" cy="46" r="8"/><path d="M96 54v46M82 62h28M82 63l-9 44M110 63l9 44M96 100l-9 50M96 100l9 50M83 152h-8M105 152h8"/>
+      <circle cx="70" cy="110" r="5"/><circle cx="124" cy="110" r="5"/>
+      <circle cx="70" cy="110" r="1.6"/><circle cx="124" cy="110" r="1.6"/>
+      <!-- 完成帧 -->
+      <circle cx="304" cy="46" r="8"/><path d="M304 54v46M290 62h28M290 63l-38 -2M318 63l38 -2M304 100l-9 50M304 100l9 50M291 152h-8M313 152h8"/>
+      <circle cx="246" cy="58" r="5"/><circle cx="362" cy="58" r="5"/>
+      <circle cx="246" cy="58" r="1.6"/><circle cx="362" cy="58" r="1.6"/>
+      <!-- 地面 -->
+      <path d="M40 162h120M250 162h120" stroke-width="1.6"/>
+    </g>
+  </svg></div>
+  <div class="note">① 起始：双臂自然下垂持铃 ② 完成：抬至与肩同高，肘微屈</div>
+</div>
+
+<!-- 样板 B：坐姿绳索划船（C 档·绳索/大型器械） -->
+<div class="placard">
+  <div class="cap">样板 B · 坐姿绳索划船（C 档）</div>
+  <div class="blk"><svg viewBox="0 0 400 230" role="img" aria-label="坐姿绳索划船 起始与完成两帧">
+    <g fill="none" stroke="#eef1f4" stroke-width="2.2" stroke-linecap="round">
+      <!-- 器械（两帧共用同款，左右各一） -->
+      <g>
+        <path d="M28 40v150M28 190h96M44 190v-58"/><path d="M20 52h16M20 68h16M20 84h16M20 100h16M20 116h16"/>
+        <path d="M28 56h34v-6h-34z"/>
+        <path d="M62 128h58v10h-58zM120 138v52M62 138v52"/>
+        <path d="M120 176h40"/>
+      </g>
+      <g transform="translate(196,0)">
+        <path d="M28 40v150M28 190h96M44 190v-58"/><path d="M20 52h16M20 68h16M20 84h16M20 100h16M20 116h16"/>
+        <path d="M28 56h34v-6h-34z"/>
+        <path d="M62 128h58v10h-58zM120 138v52M62 138v52"/>
+        <path d="M120 176h40"/>
+      </g>
+      <!-- 起始：坐姿，双臂前伸 -->
+      <circle cx="92" cy="86" r="8"/><path d="M95 94l-4 34M92 128l22 -8M108 120l26 4M126 124l14 2M92 128l-6 26M88 154v22M112 130l6 24M118 154v22"/>
+      <path d="M148 124h12" stroke-width="3"/>
+      <!-- 完成：躯干直立，拉至腹部 -->
+      <g transform="translate(196,0)">
+        <circle cx="92" cy="86" r="8"/><path d="M95 94l-4 34M92 128l22 -8M108 120l-10 12M98 132l-12 6M92 128l-6 26M88 154v22M112 130l6 24M118 154v22"/>
+        <path d="M84 136h12" stroke-width="3"/>
+      </g>
+    </g>
+  </svg></div>
+  <div class="note">① 起始：手臂前伸握把 ② 完成：拉向腹部，肘贴身体（器械为简化示意）</div>
+</div>
+
+<!-- 样板 C：解剖面板（三视图 + 部位级红色高亮；示例目标：胸） -->
+<div class="placard">
+  <div class="cap">样板 C · 解剖面板（部位级高亮 · 示例：胸）</div>
+  <div class="blk"><svg viewBox="0 0 400 230" role="img" aria-label="肌肉三视图 部位级红色高亮">
+    <g fill="none" stroke="#eef1f4" stroke-width="1.9" stroke-linecap="round">
+      <!-- 背视图 -->
+      <g>
+        <circle cx="66" cy="42" r="8"/>
+        <path d="M66 50v70M50 62h32M50 62l-8 46M82 62l8 46M66 120l-9 46M66 120l9 46M56 168h-7M76 168h7"/>
+        <path d="M58 66q8 6 16 0M60 96q6 4 12 0" stroke-width="1.4"/>
+      </g>
+      <!-- 正视图 -->
+      <g>
+        <circle cx="200" cy="42" r="8"/>
+        <path d="M200 50v70M184 62h32M184 62l-8 46M216 62l8 46M200 120l-9 46M200 120l9 46M190 168h-7M210 168h7"/>
+        <path d="M192 64q8 5 16 0M193 76q7 4 14 0M196 100q4 3 8 0" stroke-width="1.4"/>
+      </g>
+      <!-- 侧视图 -->
+      <g>
+        <circle cx="330" cy="42" r="8"/>
+        <path d="M332 50q6 30 0 60M330 58l10 40M332 118l-6 46M332 118l8 46M326 166h-6M338 166h6"/>
+        <path d="M336 74q5 8 2 16" stroke-width="1.4"/>
+      </g>
+    </g>
+    <g fill="rgba(217,58,43,.62)">
+      <!-- 背视图高亮：上背/后束 -->
+      <path d="M56 62q10 -6 20 0q-2 16 -10 20q-8 -4 -10 -20zM50 64l-6 14l7 2l5 -13zM82 64l6 14l-7 2l-5 -13z"/>
+      <!-- 正视图高亮：胸大肌 + 三角肌前束 -->
+      <path d="M190 62q10 -6 20 0q-1 12 -10 15q-9 -3 -10 -15zM184 62l-8 12l8 2l6 -11zM216 62l8 12l-8 2l-6 -11z"/>
+      <!-- 侧视图高亮：胸 + 前束 -->
+      <path d="M338 66q8 -4 12 2q-2 10 -8 13q-5 -6 -4 -15z"/>
+    </g>
+  </svg></div>
+  <div class="note">部位级高亮（胸）· 站点数据仅到部位粒度，未引入开放许可的分层解剖底图</div>
+</div>
+
+</div></body></html>

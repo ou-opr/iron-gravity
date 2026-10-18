@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>肌群总览 · 铁引力 IRON GRAVITY</title>
+<meta name="description" content="按肌群浏览：每个肌群一张肌群级解剖图（前后双视图、红高亮）+ 该肌群的全部动作，一眼看清练哪里。">
+<link rel="canonical" href="https://ou-opr.github.io/iron-gravity/muscles.html">
+<meta property="og:title" content="肌群总览 · 铁引力 IRON GRAVITY">
+<meta property="og:description" content="按肌群浏览：每个肌群一张肌群级解剖图（前后双视图、红高亮）+ 该肌群的全部动作，一眼看清练哪里。">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://ou-opr.github.io/iron-gravity/assets/img/icon-512.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="assets/manifest.json">
+<meta name="theme-color" content="#0a0b10">
+<link rel="apple-touch-icon" href="assets/img/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="铁引力">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-page="muscles">
+<a class="skip" href="#main">跳到主内容</a>
+
+<header class="topbar"><div class="in">
+  <a class="logo" href="index.html"><span class="mark"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg></span><span>铁引力<small>IRON GRAVITY</small></span></a>
+  <nav class="nav" aria-label="主导航">
+    <a href="index.html">首页</a>
+    <a href="exercises.html">动作库</a>
+    <a href="muscles.html">肌群总览</a>
+    <a href="plans.html">训练计划</a>
+    <a href="nutrition.html">饮食营养</a>
+    <a href="videos.html">视频精选</a>
+    <a href="log.html">训练日志</a>
+    <a href="glossary.html">术语手册</a>
+    <a href="evidence.html">证据与来源</a>
+  </nav>
+</div></header>
+
+<section class="hero"><div class="in padtight">
+  <div class="kick">MUSCLE MAP</div>
+  <h1 class="ph1">肌群总览</h1>
+  <p class="sub">每个肌群一张肌群级解剖图（前 / 后双视图，<b style="color:#ff2d2d">亮红=目标肌群</b>、<b style="color:#b23a30">暗红=参与肌群</b>），下面列出练到它的全部动作。点肌群名或动作名都能直达。</p>
+</div></section>
+
+<main class="wrap pt30" id="main"></main>
+
+<footer><div class="in">
+  <div><h4>铁引力 · IRON GRAVITY</h4><p>中文循证健身指南：动作、计划、饮食与创作者精选，一条路径从零到进阶。</p></div>
+  <div><h4>快速导航</h4><ul><li><a href="exercises.html">动作库</a> <a href="muscles.html">肌群总览</a></li><li><a href="plans.html">训练计划</a></li><li><a href="nutrition.html">饮食营养</a></li><li><a href="videos.html">视频精选</a></li><li><a href="log.html">训练日志</a></li><li><a href="evidence.html">证据与来源</a></li><li><a href="glossary.html">术语手册</a></li></ul></div>
+  <div><h4>数据与版权</h4><ul><li>解剖数据：@emmorts/body-muscles（Apache-2.0）</li><li>许可全文见 docs/ATTRIBUTION.md</li><li>图示为原创自绘 SVG，双主题换色</li></ul></div>
+  <div class="fine">© <span id="yr"></span> 铁引力 IRON GRAVITY · 由 Hermes 自主搭建 · 链接核验于 2026-10</div>
+</div></footer>
+
+<script defer src="assets/js/data-exercises-a.js"></script>
+<script defer src="assets/js/data-exercises-b.js"></script>
+<script defer src="assets/js/data-exercises-c.js"></script>
+<script defer src="assets/js/data-exercises-d.js"></script>
+<script defer src="assets/js/data-exercises-e.js"></script>
+<script defer src="assets/js/data-exercises-f.js"></script>
+<script defer src="assets/js/anatomy-atlas.js"></script>
+<script defer src="assets/js/data-muscles-map.js"></script>
+<script defer src="assets/js/ex-art-atlas.js"></script>
+<script defer src="assets/js/data-evidence.js"></script>
+<script defer src="assets/js/calc.js"></script>
+<script defer src="assets/js/app.js"></script>
+<script>
+/* 肌群总览页：族表（与动作库筛选同源）→ 每族一张解剖图 + 该族动作清单 */
+document.addEventListener("DOMContentLoaded", function () {
+  var FAMS = window.IG_MUSCLE_FAMS || {};
+  var ZH = window.IG_MUSCLE_ZH || {};
+  var MAP = window.IG_MUSCLES_MAP || {};
+  var EXS = window.FIT_EXERCISES || [];
+  var wrap = document.getElementById("main");
+  if (!wrap || !window.IG_ATLAS_ART) return;
+  /* 站点页地址用变量拼接：避免静态链接扫描把脚本里的拼接串误判为坏链 */
+  var PG = { ex: "exercises.html", dt: "detail.html" };
+
+  function basesOf(id) {
+    var seen = {}, out = [];
+    (MAP[id] || []).forEach(function (m) {
+      var b = String(m).replace(/-(left|right)$/, "");
+      if (!seen[b]) { seen[b] = 1; out.push(b); }
+    });
+    return out;
+  }
+  function inFam(base, keys) {
+    return keys.some(function (f) { return f.slice(-1) === "-" ? base.indexOf(f) === 0 : base === f; });
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  function allIdsOf(keys) {
+    var seen = {}, out = [];
+    EXS.forEach(function (e) {
+      (MAP[e.id] || []).forEach(function (m) {
+        var b = String(m).replace(/-(left|right)$/, "");
+        if (!inFam(b, keys) || seen[m]) return;
+        seen[m] = 1;
+        out.push(m);
+      });
+    });
+    return out;
+  }
+
+  wrap.innerHTML = Object.keys(FAMS).map(function (fam) {
+    var keys = FAMS[fam];
+    var ids = allIdsOf(keys);
+    var art = ids.length ? IG_ATLAS_ART.of(ids) : "";
+    var names = (function () {
+      var seen = {}, out = [];
+      ids.forEach(function (id) {
+        var b = id.replace(/-(left|right)$/, "");
+        if (!ZH[b] || seen[ZH[b]]) return;
+        seen[ZH[b]] = 1;
+        out.push(ZH[b]);
+      });
+      return out.join(" · ");
+    })();
+    var exs = EXS.filter(function (e) {
+      return basesOf(e.id).some(function (b) { return inFam(b, keys); });
+    });
+    return '<section class="mgcard" id="mg-' + esc(fam) + '">'
+      + '<div class="mghead"><h2>' + esc(fam) + '</h2><span class="mut">' + esc(names || "") + '</span>'
+      + '<a class="hint" href="' + PG.ex + "?muscle=" + encodeURIComponent(fam) + '" style="color:var(--acc)">在动作库中筛选 →</a></div>'
+      + '<div class="mgbody"><div class="mgart">' + art + '</div>'
+      + '<div class="mgex">' + exs.map(function (e) {
+          return '<a href="' + PG.dt + "?id=" + esc(e.id) + '">' + esc(e.name) + '</a>';
+        }).join("") + '</div></div></section>';
+  }).join("") + '<p class="hint">共 ' + EXS.length + ' 个动作 · 肌群族 ' + Object.keys(FAMS).length + ' 类；解剖图数据来源见 docs/ATTRIBUTION.md。</p>';
+
+  /* ?fam=背 或 #mg-背：直达该族并高亮（导航与外部链接可用） */
+  var fam0 = new URLSearchParams(location.search).get("fam") || (location.hash.indexOf("#mg-") === 0 ? decodeURIComponent(location.hash.slice(4)) : "");
+  if (fam0 && FAMS[fam0]) {
+    var el = document.getElementById("mg-" + fam0);
+    if (el) {
+      el.classList.add("on");
+      el.scrollIntoView({ block: "start" });
+    }
+  }
+});
+</script>
+</body>
+</html>

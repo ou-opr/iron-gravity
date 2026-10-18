@@ -1,0 +1,58 @@
+name: verify
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  # 外链会腐烂：每月 1 日 03:00 UTC 自动复检一次
+  schedule:
+    - cron: "0 3 1 * *"
+  workflow_dispatch:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # 仓库根就是 "iron gravity/"（.git 在这里），所以各步骤默认工作目录即项目根，无需切换。
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # ubuntu-latest 自带 google-chrome；若镜像变化，这里会打印实际路径
+      - name: 确认 Chrome
+        run: node -e "import('./tools/lib/chrome.mjs').then(m=>{const c=m.findChrome();console.log('chrome =',c);if(!c)process.exit(1)})"
+
+      - name: 页面是否与 partials 同步（改 --dry 看差异）
+        run: node tools/build-pages.mjs --check
+
+      # 站内数据/几何/映射/服务器/冒烟/无障碍（不含联网外链，保证 PR 门禁稳定）
+      - name: 回归（离线项 + 冒烟 + axe）
+        run: node tools/check-all.mjs --no-links
+
+      # 外链单独跑：只在定时任务或手动触发时执行，避免无关 PR 因网络抖动变红
+      - name: 外链复检
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: node tools/check-links.mjs
+
+      # 动作教学视频（YouTube oEmbed）与证据文献（NCBI PMID）：这些链接写数据里，
+      # check-links 扫 href 扫不到，必须单独验。视频被删/设私有是最典型的媒体腐烂。
+      - name: 媒体验证（视频 + 文献）
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: |
+          node tools/check-media.mjs --json > tools/media-report.json || true
+          node tools/check-media.mjs
+
+      - name: 存档审计报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-reports
+          path: |
+            tools/link-report.json
+            tools/a11y-report.json
+            tools/media-report.json
+          if-no-files-found: ignore
+          retention-days: 30

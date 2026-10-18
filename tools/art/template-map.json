@@ -1,0 +1,174 @@
+{
+ "tiers": {
+  "A": [
+   "db-bench",
+   "incline-db-press",
+   "pushup",
+   "dips",
+   "pullup",
+   "db-row",
+   "inverted-row",
+   "db-shoulder-press",
+   "lateral-raise",
+   "rear-delt-fly",
+   "arnold-press",
+   "goblet-squat",
+   "bss",
+   "lunge",
+   "glute-bridge",
+   "hammer-curl",
+   "incline-curl",
+   "overhead-ext",
+   "plank",
+   "hanging-leg-raise",
+   "dead-bug",
+   "side-plank",
+   "ab-wheel",
+   "farmer-carry",
+   "burpee",
+   "bw-squat",
+   "wall-sit",
+   "reverse-lunge",
+   "single-leg-glute-bridge",
+   "bird-dog",
+   "russian-twist",
+   "side-lying-leg-raise"
+  ],
+  "B": [
+   "bench-press",
+   "bb-row",
+   "deadlift",
+   "ohp",
+   "squat",
+   "rdl",
+   "front-squat",
+   "hip-thrust",
+   "bb-curl",
+   "skull-crusher",
+   "kb-swing"
+  ],
+  "C": [
+   "cable-fly",
+   "pec-deck",
+   "lat-pulldown",
+   "seated-row",
+   "straight-arm-pulldown",
+   "face-pull",
+   "leg-press",
+   "leg-curl",
+   "leg-ext",
+   "calf-raise",
+   "cable-kickback",
+   "pushdown",
+   "cable-crunch"
+  ],
+  "D": [
+   "band-walk",
+   "band-row",
+   "band-chest-press",
+   "band-pull-apart"
+  ]
+ },
+ "patterns": {
+  "bench": [
+   "bench-press(B)",
+   "db-bench(A)",
+   "incline-db-press(A)",
+   "incline-curl(A)"
+  ],
+  "pushup": [
+   "pushup(A)"
+  ],
+  "flye": [
+   "cable-fly(C)",
+   "pec-deck(C)"
+  ],
+  "dip": [
+   "dips(A)"
+  ],
+  "pull": [
+   "pullup(A)",
+   "lat-pulldown(C)",
+   "straight-arm-pulldown(C)",
+   "lateral-raise(A)",
+   "face-pull(C)",
+   "band-walk(D)",
+   "band-row(D)",
+   "band-chest-press(D)",
+   "band-pull-apart(D)"
+  ],
+  "hinge": [
+   "bb-row(B)",
+   "db-row(A)",
+   "deadlift(B)",
+   "inverted-row(A)",
+   "rdl(B)",
+   "kb-swing(B)"
+  ],
+  "seatrow": [
+   "seated-row(C)"
+  ],
+  "press": [
+   "db-shoulder-press(A)",
+   "ohp(B)",
+   "arnold-press(A)",
+   "overhead-ext(A)"
+  ],
+  "reardelt": [
+   "rear-delt-fly(A)"
+  ],
+  "squat": [
+   "squat(B)",
+   "goblet-squat(A)",
+   "leg-press(C)",
+   "bss(A)",
+   "front-squat(B)",
+   "bw-squat(A)",
+   "wall-sit(A)"
+  ],
+  "legcurl": [
+   "leg-curl(C)"
+  ],
+  "machinelegs": [
+   "leg-ext(C)"
+  ],
+  "calf": [
+   "calf-raise(C)"
+  ],
+  "lunge": [
+   "lunge(A)",
+   "reverse-lunge(A)"
+  ],
+  "thrust": [
+   "hip-thrust(B)"
+  ],
+  "bridge": [
+   "glute-bridge(A)",
+   "cable-kickback(C)",
+   "single-leg-glute-bridge(A)"
+  ],
+  "curl": [
+   "bb-curl(B)",
+   "hammer-curl(A)"
+  ],
+  "triceps": [
+   "pushdown(C)",
+   "skull-crusher(B)"
+  ],
+  "core": [
+   "plank(A)",
+   "hanging-leg-raise(A)",
+   "cable-crunch(C)",
+   "dead-bug(A)",
+   "side-plank(A)",
+   "ab-wheel(A)",
+   "bird-dog(A)",
+   "side-lying-leg-raise(A)"
+  ],
+  "stand": [
+   "farmer-carry(A)",
+   "burpee(A)",
+   "russian-twist(A)"
+  ]
+ }
+}

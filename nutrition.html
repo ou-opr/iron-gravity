@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>饮食营养 · 铁引力 IRON GRAVITY</title>
+<meta name="description" content="TDEE 热量计算器、三大宏量分配、30 种常见食物速查、增肌/减脂示例餐单与补剂证据等级，数字逐条附文献来源。">
+<link rel="canonical" href="https://ou-opr.github.io/iron-gravity/nutrition.html">
+<meta property="og:title" content="饮食营养 · 铁引力 IRON GRAVITY">
+<meta property="og:description" content="TDEE 热量计算器、三大宏量分配、30 种常见食物速查、增肌/减脂示例餐单与补剂证据等级，数字逐条附文献来源。">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://ou-opr.github.io/iron-gravity/assets/img/icon-512.png">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="assets/manifest.json">
+<meta name="theme-color" content="#0a0b10">
+<link rel="apple-touch-icon" href="assets/img/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="铁引力">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-page="nutrition">
+<a class="skip" href="#main">跳到主内容</a>
+
+<header class="topbar"><div class="in">
+  <a class="logo" href="index.html"><span class="mark"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg></span><span>铁引力<small>IRON GRAVITY</small></span></a>
+  <nav class="nav" aria-label="主导航">
+    <a href="index.html">首页</a>
+    <a href="exercises.html">动作库</a>
+    <a href="muscles.html">肌群总览</a>
+    <a href="plans.html">训练计划</a>
+    <a href="nutrition.html">饮食营养</a>
+    <a href="videos.html">视频精选</a>
+    <a href="log.html">训练日志</a>
+    <a href="glossary.html">术语手册</a>
+    <a href="evidence.html">证据与来源</a>
+  </nav>
+</div></header>
+
+<section class="hero"><div class="in padtight">
+  <div class="kick">NUTRITION</div>
+  <h1 class="ph1">饮食营养</h1>
+  <p class="sub">吃是训练的另一半。先算出你的目标热量，再把蛋白质吃够——剩下的交给时间和坚持。</p>
+</div></section>
+
+<main class="wrap pt30" id="main">
+
+  <section class="sec" style="padding-top:10px">
+    <div class="head"><h2>热量计算器</h2><p>Mifflin-St Jeor 公式 · 结果自动更新</p></div>
+    <div class="calc">
+      <div class="card">
+        <div class="field"><label for="cGender">性别</label><select id="cGender"><option value="m" selected>男</option><option value="f">女</option></select></div>
+        <div class="grid g2" style="gap:12px">
+          <div class="field"><label for="cAge">年龄（岁）</label><input id="cAge" type="number" min="14" max="80" value="20"></div>
+          <div class="field"><label for="cHeight">身高（cm）</label><input id="cHeight" type="number" min="120" max="230" value="175"></div>
+        </div>
+        <div class="field"><label for="cWeight">体重（kg）</label><input id="cWeight" type="number" min="30" max="200" step="0.5" value="70"></div>
+        <div class="field"><label for="cAct">活动量（含训练）</label><select id="cAct">
+          <option value="1.2">久坐（几乎不运动）</option>
+          <option value="1.375">轻度（每周 1–2 练）</option>
+          <option value="1.55" selected>中度（每周 3–5 练）</option>
+          <option value="1.725">高（每周 6–7 练）</option>
+          <option value="1.9">极高（体力工作 + 双训）</option></select></div>
+        <div class="field"><label for="cGoal">目标</label><select id="cGoal">
+          <option value="cut">减脂（-20% 热量）</option>
+          <option value="maintain" selected>维持体重</option>
+          <option value="bulk">增肌（+12% 热量）</option></select></div>
+        <p class="hint">计算器给出的是<b>起点估计</b>：以 2 周体重趋势为准做微调，比公式本身更重要。</p>
+      </div>
+      <div class="calc-res" id="calcRes" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="head"><h2>七条铁律</h2><p>记住这些，比记任何食谱都有用</p></div>
+    <div class="card"><ul class="plist" id="nPrin"></ul></div>
+  </section>
+
+  <section class="sec">
+    <div class="head"><h2>食物速查表</h2><p>每 100g 营养素（USDA / 中国食物成分表近似值）</p></div>
+    <div class="toolbar" style="margin-bottom:14px">
+      <span class="seg" id="foodTags"></span>
+    </div>
+    <div class="search" style="margin-bottom:16px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg><input id="foodSearch" type="search" placeholder="搜索食物，如「鸡胸」「燕麦」"></div>
+    <div class="tblwrap"><table>
+      <thead><tr><th>食物</th><th class="c">热量 kcal</th><th class="c">蛋白 g</th><th class="c">脂肪 g</th><th class="c">碳水 g</th><th>常见份量</th><th>备注</th></tr></thead>
+      <tbody id="foodRows"></tbody>
+    </table></div>
+  </section>
+
+  <section class="sec">
+    <div class="head"><h2>一日示例餐单</h2><p>中式食材、照着吃就行（按你的热量结果等比缩放）</p></div>
+    <div class="grid g2" id="mealWrap"></div>
+  </section>
+
+  <section class="sec">
+    <div class="card" id="genBox" style="padding:16px 18px">
+      <h3 style="font-size:15px;font-weight:900;margin-bottom:4px">一日食谱生成器</h3>
+      <p class="desc" style="margin-bottom:12px">按上面算出的热量目标（三餐 30/35/35 分配），从食物速查表随机拼三餐；照着份量吃即可，不需要精确到克。</p>
+      <div id="genOut" class="vnote"></div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px">
+        <button class="btn sm primary" id="genBtn" type="button">换一换 ↻</button>
+        <span class="hint" id="genHint">未计算热量时按 2100 kcal 生成</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="head"><h2>补剂证据等级</h2><p>A = 证据充分且有实际价值 · B = 有条件的补充</p></div>
+    <div class="tblwrap"><table>
+      <thead><tr><th>补剂</th><th>用法</th><th class="c">等级</th><th>说明</th></tr></thead>
+      <tbody id="supRows"></tbody>
+    </table></div>
+    <div class="callout info" style="margin-top:18px"><b>文献出处：</b>
+      <a href="https://pubmed.ncbi.nlm.nih.gov/41343037/" target="_blank" rel="noopener">Pelland 2025《The Resistance Training Dose Response》(PubMed)</a> ·
+      <a href="https://pubmed.ncbi.nlm.nih.gov/28698222/" target="_blank" rel="noopener">Morton 2018 蛋白质 meta 分析 (PubMed)</a> ·
+      <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8978023/" target="_blank" rel="noopener">Nunes 2022 蛋白质摄入系统综述 (PMC)</a>
+    </div>
+    <div class="callout warn mt14" id="nDisc"></div>
+  </section>
+</main>
+
+<footer><div class="in">
+  <div><h4>铁引力 · IRON GRAVITY</h4><p>中文循证健身指南：动作、计划、饮食与创作者精选，一条路径从零到进阶。</p></div>
+  <div><h4>快速导航</h4><ul><li><a href="exercises.html">动作库</a> <a href="muscles.html">肌群总览</a></li><li><a href="plans.html">训练计划</a></li><li><a href="nutrition.html">饮食营养</a></li><li><a href="videos.html">视频精选</a></li><li><a href="log.html">训练日志</a></li><li><a href="evidence.html">证据与来源</a></li><li><a href="glossary.html">术语手册</a></li></ul></div>
+  <div><h4>说明</h4><ul><li>数值为近似值，仅供参考</li><li>特殊健康状况请咨询医生/注册营养师</li><li>关键数字附证据来源（见「证据与来源」）</li></ul></div>
+  <div class="fine">© <span id="yr"></span> 铁引力 IRON GRAVITY · 由 Hermes 自主搭建 · 链接核验于 2026-10</div>
+</div></footer>
+
+<script defer src="assets/js/data-nutrition-a.js"></script>
+<script defer src="assets/js/data-nutrition-b.js"></script>
+<script defer src="assets/js/data-portions.js"></script>
+<script defer src="assets/js/data-evidence.js"></script>
+<script defer src="assets/js/calc.js"></script>
+<script defer src="assets/js/app.js"></script>
+</body>
+</html>

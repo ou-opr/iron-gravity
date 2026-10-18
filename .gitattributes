@@ -1,0 +1,11 @@
+# 换行统一：仓库与工作区都保持 LF。
+# 本项目源文件一律 LF，若沿用 Windows 默认 core.autocrlf=true，首次 checkout 会把
+# 246 个文件悄悄改成 CRLF（后续 diff 也会变噪）。
+* text=auto eol=lf
+
+# 二进制资源保持原样，不做换行转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.pdf binary
+*.ico binary

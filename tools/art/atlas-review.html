@@ -1,0 +1,31 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8"><title>atlas 面板视觉复审</title>
+<style>
+body{margin:0;background:#0a0b10;color:#e9ecf4;font:13px/1.5 system-ui,sans-serif;display:flex;flex-wrap:wrap;padding:16px;gap:8px}
+.c{width:250px}.lab{margin:4px 0 2px;font-weight:700}
+.box{background:#121417;border-radius:12px;padding:6px;box-shadow:inset 0 0 0 1px #1c1f26}
+svg{display:block;width:100%;height:auto}
+.atlas2{display:flex}.atlas2 svg{width:50%}
+</style></head><body>
+<div id="grid"></div>
+<script src="../../assets/js/data-exercises-a.js"></script>
+<script src="../../assets/js/data-exercises-b.js"></script>
+<script src="../../assets/js/data-exercises-c.js"></script>
+<script src="../../assets/js/data-exercises-d.js"></script>
+<script src="../../assets/js/data-exercises-e.js"></script>
+<script src="../../assets/js/data-exercises-f.js"></script>
+<script src="../../assets/js/anatomy-atlas.js"></script>
+<script src="../../assets/js/data-muscles-map.js"></script>
+<script src="../../assets/js/ex-art-atlas.js"></script>
+<script>
+var ids = ["bench-press","pullup","db-shoulder-press","squat","hip-thrust","bb-curl","plank","calf-raise","farmer-carry","deadlift","pushup","lateral-raise"];
+var g = document.getElementById("grid");
+g.style.display = "flex"; g.style.flexWrap = "wrap";
+ids.forEach(function (id) {
+  var ex = null;
+  for (var e of (window.FIT_EXERCISES || [])) if (e.id === id) { ex = e; break; }
+  var col = document.createElement("div"); col.className = "c";
+  col.innerHTML = '<div class="lab">' + (ex ? esc(ex.name) + "（" + id + "）" : id + " ⚠️未找到") + '</div><div class="box">' + (window.IG_ATLAS_ART ? IG_ATLAS_ART.for(ex || {id:id, parts:[]}) : "") + "</div>";
+  g.appendChild(col);
+});
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];})}
+</script></body></html>

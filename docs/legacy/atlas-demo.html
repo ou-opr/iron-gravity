@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"><title>atlas POC 对比 · db-shoulder-press</title>
+<style>
+body{margin:0;background:#0a0b10;color:var(--fg,#e8e8e8);font:14px/1.5 system-ui,sans-serif;display:flex;gap:18px;padding:18px;flex-wrap:wrap}
+.wrap{max-width:210px}
+h3{margin:0 0 6px;font-weight:600;color:#e8e8e8}
+.lab{margin:14px 0 6px;color:#9aa0a8;font-size:12px}
+.box{background:#121417;border-radius:14px;padding:8px;box-shadow:inset 0 0 0 1px #1c1f26}
+svg{display:block;width:100%;height:auto}
+.atlas2{display:flex}
+.atlas2 svg{width:50%}
+</style>
+</head>
+<body>
+<div class="wrap"><h3>旧 · 部位级面板</h3><div class="lab">IG_PLACARD.panel(["肩"])</div><div class="box" id="old"></div></div>
+<div class="wrap"><h3>新 · 肌群级解剖（Apache-2.0 数据）</h3><div class="lab">IG_ATLAS_ART.of([三角肌前/中束×4, 上胸×2])</div><div class="box" id="new"></div></div>
+<div class="wrap"><h3>新 · atlas 关闭（兜底）</h3><div class="lab">IG_ATLAS_ART.of([])</div><div class="box" id="none"></div></div>
+<script src="../../assets/js/ex-art-placard.js"></script>
+<script src="../../assets/js/anatomy-atlas.js"></script>
+<script src="../../assets/js/ex-art-atlas.js"></script>
+<script>
+document.getElementById("old").innerHTML = IG_PLACARD.panel(["肩"]);
+var ids = ["shoulder-front-left","shoulder-front-right","shoulder-side-left","shoulder-side-right","chest-upper-left","chest-upper-right"];
+document.getElementById("new").innerHTML = IG_ATLAS_ART.of(ids);
+document.getElementById("none").innerHTML = IG_ATLAS_ART.of([]);
+</script>
+</body>
+</html>

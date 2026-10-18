@@ -1,0 +1,37 @@
+{
+  "name": "iron-gravity",
+  "version": "1.0.0",
+  "private": true,
+  "description": "铁引力 IRON GRAVITY —— 中文循证健身指南（纯静态、零运行时依赖、双击即用）",
+  "license": "SEE LICENSE IN LICENSE",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node tools/build-pages.mjs",
+    "check:build": "node tools/build-pages.mjs --check",
+    "test": "node tools/check-all.mjs",
+    "test:offline": "node tools/check-all.mjs --no-links",
+    "a11y": "node tools/a11y-audit.mjs",
+    "validate": "node tools/validate.mjs",
+    "links": "node tools/check-links.mjs",
+    "serve": "node tools/serve.mjs",
+    "domain": "node tools/set-domain.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ou-opr/iron-gravity.git"
+  },
+  "homepage": "https://github.com/ou-opr/iron-gravity#readme",
+  "bugs": {
+    "url": "https://github.com/ou-opr/iron-gravity/issues"
+  },
+  "keywords": [
+    "fitness",
+    "strength-training",
+    "evidence-based",
+    "static-site",
+    "offline-first",
+    "chinese"
+  ]
+}

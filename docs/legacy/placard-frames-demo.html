@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>说明牌图层自检（肘部模板 + 8 部位面板）</title>
+<style>
+body{margin:0;padding:18px;background:#0a0b10;font:13px/1.5 "PingFang SC","Microsoft YaHei",sans-serif;color:#e9ecf4}
+.row{display:flex;gap:16px;flex-wrap:wrap}
+.card{width:392px}
+.blk{background:#121417;border-radius:14px;padding:8px;margin-bottom:6px}
+.blk svg{display:block;width:100%;height:auto}
+.cap{font-weight:700;font-size:13px;margin:4px 2px 2px}
+</style></head><body>
+<div id="out"></div>
+<script src="../../assets/js/ex-art-placard.js"></script>
+<script>
+var o = [];
+o.push('<div class="row"><div class="card"><div class="cap">动作帧 · 哑铃侧平举（修版：肘可见 15–20° 微屈）</div><div class="blk">' + IG_PLACARD.frames("raise") + '</div></div></div>');
+var parts = ["胸", "背", "肩", "腿", "臀", "手臂", "核心", "全身"];
+o.push('<div class="row">' + parts.map(function (p) {
+  return '<div class="card" style="width:300px"><div class="cap">面板 · parts=「' + p + '」</div><div class="blk">' + IG_PLACARD.panel([p]) + '</div></div>';
+}).join("") + '</div>');
+o.push('<div class="row"><div class="card" style="width:392px"><div class="cap">多部位示例 · parts=「胸/手臂」</div><div class="blk">' + IG_PLACARD.panel(["胸", "手臂"]) + '</div></div></div>');
+document.getElementById("out").innerHTML = o.join("");
+</script>
+</body></html>

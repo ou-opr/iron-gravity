@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>动作帧隔离复核</title>
+<style>body{margin:0;padding:14px;background:#0a0b10;color:#e9ecf4;font:12px/1.5 "PingFang SC",sans-serif}
+.b{background:#121417;border-radius:12px;padding:6px;display:inline-block;vertical-align:top;margin:0 12px 10px 0}
+.b svg{display:block}
+.lab{margin:2px 0 8px;font-weight:700}
+</style></head><body>
+<div class="lab">A) 大图（392px 宽）— 严格应为两帧、两帧均有哑铃、完成帧肘折角可读</div>
+<div class="b" style="width:392px" id="big"></div>
+<div class="b" style="width:120px" id="small"></div>
+<div class="b" style="width:64px" id="mini"></div>
+<script src="../../assets/js/ex-art-placard.js"></script>
+<script>
+var keys = [["raise","哑铃侧平举 · A"],["bench","杠铃卧推 · B"],["flye","仰卧哑铃飞鸟 · B"],["lunge","哑铃分腿蹲 · B"],["dip","双杠臂屈伸 · A"],["pushup","俯卧撑 · A"],["thrust","杠铃臀推 · C(简化示意)"],["bridge","自重臀桥 · A"],["reardelt","俯身反向飞鸟 · B"],["stand","兜底站姿"],["pullup","引体向上 · A"],["pulldown","高位下拉 · C(简化示意)"],["squat","杠铃深蹲 · B"],["deadlift","硬拉 · B"],["row","杠铃划船 · B"],["core","卷腹 · A"],["press","坐姿哑铃推举 · A"],["seatrow","坐姿绳索划船 · C(简化示意)"],["curl","哑铃弯举 · B"],["triceps","绳索下压 · C(简化示意)"],["machinelegs","坐姿蹬腿 · C(简化示意)"],["legcurl","俯卧腿弯举 · C(简化示意)"],["calf","站姿提踵 · 器械简化"]];
+document.body.innerHTML = keys.map(function (k) {
+  return '<div class="lab">' + k[0] + ' · ' + k[1] + '（392px）</div><div class="b" style="width:392px">' + IG_PLACARD.frames(k[0]) + '</div>';
+}).join("");
+</script>
+</body></html>

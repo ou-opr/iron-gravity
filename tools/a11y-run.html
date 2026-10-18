@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>axe audit runner</title>
+<style>body{font:12px/1.5 Consolas,monospace;background:#0a0b10;color:#e9ecf4;margin:0;padding:12px;white-space:pre-wrap}iframe{width:1200px;height:700px;border:0;opacity:.15;position:absolute;left:-9999px}</style>
+</head>
+<body>
+<div id="out">RUNNING</div>
+<iframe id="f"></iframe>
+<script>
+var SRC = "";
+try {
+  var xhr = new XMLHttpRequest();
+  xhr.open("GET", "axe.min.js", false);
+  xhr.send(null);
+  SRC = xhr.responseText || "";
+} catch (e) { SRC = ""; }
+/* 页面列表由 a11y-audit.mjs 通过 ?pages=a,b,c 传入；单独打开本页时用默认列表 */
+var pages = (function () {
+  var q = new URLSearchParams(location.search).get("pages");
+  return (q ? q.split(",") : ["index","exercises","muscles","plans","nutrition","videos","log","glossary","detail"])
+    .map(function (s) { return s.trim(); }).filter(Boolean);
+})();
+/* v17：主题也要各自跑一遍。CI（Ubuntu）默认浅色、开发机默认深色，
+   只跑一套就会漏掉另一半——浅色主题的对比度问题正是这样被漏掉的。
+   站点本身支持 ?theme=light|dark 临时指定，这里直接利用，不碰 localStorage。 */
+var themes = (function () {
+  var q = new URLSearchParams(location.search).get("themes");
+  return (q ? q.split(",") : ["dark", "light"]).map(function (s) { return s.trim(); }).filter(Boolean);
+})();
+var jobs = [];
+pages.forEach(function (p) { themes.forEach(function (t) { jobs.push({ page: p, theme: t }); }); });
+var out = [], i = 0, agg = {};
+function nxt() {
+  if (i >= jobs.length) {
+    out.push("");
+    out.push("===== 汇总（违规项按规则聚合）=====");
+    Object.keys(agg).sort(function(a,b){return agg[b].n-agg[a].n;}).forEach(function(k){
+      out.push("  " + k + "  x" + agg[k].n + "  (" + agg[k].pages.join(",") + ")");
+    });
+    out.push("DONE");
+    document.getElementById("out").textContent = out.join("\n");
+    return;
+  }
+  var job = jobs[i++];
+  var name = job.page + "[" + job.theme + "]";
+  var f = document.getElementById("f");
+  f.onload = function () {
+    setTimeout(function () { run(name, job, f.contentWindow, f.contentDocument); }, 700);
+  };
+  f.src = "../" + job.page + ".html?noconfirm=1&theme=" + job.theme;
+}
+function run(name, job, w, d) {
+  try {
+    if (!w.axe && SRC) w.eval(SRC);
+    if (!w.axe) { out.push("== " + name + " == AXE NOT LOADED (srcLen=" + SRC.length + ")"); nxt(); return; }
+    /* 让滚动揭示元素立即到达最终态，并关掉过渡/动画：
+       否则 axe 可能在 opacity 过渡的中间帧采样，把「正常的灰字」判成对比度不足（不稳定误报）。 */
+    try {
+      var rv = d.querySelectorAll("[data-reveal]");
+      for (var ri = 0; ri < rv.length; ri++) rv[ri].classList.add("in");
+      var st = d.createElement("style");
+      st.textContent = "*,*::before,*::after{transition:none!important;animation:none!important}";
+      (d.head || d.documentElement).appendChild(st);
+    } catch (e0) {}
+    setTimeout(function () { axeRun(name, job, w, d); }, 120);
+  } catch (e) { out.push("== " + name + " == THROW " + e.message); nxt(); }
+}
+function axeRun(name, job, w, d) {
+  try {
+    w.axe.run(d, { runOnly: { type: "tag", values: ["wcag2a","wcag2aa","wcag21a","wcag21aa"] } }, function (err, res) {
+      if (err) { out.push("== " + name + " == ERR " + err.message); nxt(); return; }
+      /* themeActual 用来证明 ?theme= 真的生效了：否则两轮跑出一样的数字也没人会察觉 */
+      var actual = d.body.classList.contains("light") ? "light" : "dark";
+      out.push("== " + name + " == violations=" + res.violations.length + " passes=" + res.passes.length + " themeActual=" + actual);
+      res.violations.forEach(function (v) {
+        out.push("  " + v.id + " [" + v.impact + "] x" + v.nodes.length + " :: " + (v.nodes[0].target || []).join(" "));
+        if (!agg[v.id]) agg[v.id] = { n: 0, pages: [] };
+        agg[v.id].n += v.nodes.length;
+        if (agg[v.id].pages.indexOf(name) < 0) agg[v.id].pages.push(name);
+      });
+      nxt();
+    });
+  } catch (e) { out.push("== " + name + " == THROW " + e.message); nxt(); }
+}
+window.addEventListener("load", function () {
+  window.__axeSrc = window.axe ? null : null;
+  nxt();
+});
+</script>
+</body></html>

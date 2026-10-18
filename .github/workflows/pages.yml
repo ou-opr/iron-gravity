@@ -1,0 +1,51 @@
+name: pages
+
+# 把站点发布到 GitHub Pages：https://ou-opr.github.io/iron-gravity/
+# 仓库根就是项目根（.git 在 "iron gravity/" 里），但站点本体只占其中一部分——
+# tools/ docs/ partials/ 这些开发文件不该出现在公开站点上，所以先 rsync 到一个干净目录。
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 构建一致性（页面必须与 partials 同步）
+        run: node tools/build-pages.mjs --check
+
+      - name: 准备站点目录（排除开发文件）
+        run: |
+          mkdir -p _site
+          rsync -a \
+            --exclude='.git' --exclude='.github' --exclude='.gitignore' --exclude='.gitattributes' \
+            --exclude='tools' --exclude='docs' --exclude='partials' \
+            --exclude='package.json' --exclude='pages.config.json' --exclude='serve.cmd' \
+            --exclude='CHANGELOG.md' --exclude='LICENSE-CONTENT.md' \
+            ./ _site/
+          echo "--- 将发布的文件 ---"
+          find _site -maxdepth 1 -mindepth 1 | sort
+          echo "总计 $(find _site -type f | wc -l) 个文件 · $(du -sh _site | cut -f1)"
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4

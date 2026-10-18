@@ -1,0 +1,7 @@
+# 铁引力 IRON GRAVITY —— 纯静态站点
+# 本地双击 index.html 打开时本文件无作用；部署到静态托管（GitHub Pages / Netlify 等）后自动生效
+User-agent: *
+Allow: /
+Disallow: /docs/
+Disallow: /tools/
+Sitemap: https://ou-opr.github.io/iron-gravity/sitemap.xml
