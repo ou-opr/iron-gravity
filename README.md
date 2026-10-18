@@ -198,6 +198,7 @@ node tools/set-domain.mjs https://your-domain.com   # 一次性：canonical / og
 
 - 当前版本 **1.0.0**：`package.json`、`sw.js` 的 `VERSION`、git tag 三处一致。
   1.0.0 之前是 5 轮内部迭代（内部计数 v14 → v18），记录留在 `CHANGELOG.md` 的「开发期迭代记录」里。
+- **日常维护流程（改哪里 → 跑什么 → 怎么发版）见 [`docs/MAINTENANCE.md`](docs/MAINTENANCE.md)。**
 - 变更记录见 [`CHANGELOG.md`](CHANGELOG.md)（按版本列「新增 / 变更 / 修复」）。
 - 缓存失效是全自动的：`sw.js` 的 `VERSION` 由 `npm run build` 从 `package.json` 注入，发版只改一处。
 - 打发布点：`git tag -a v1.0.0 -m "iron gravity 1.0.0" && git push origin v1.0.0`。
