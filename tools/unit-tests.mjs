@@ -161,6 +161,65 @@ t("progression：空组被过滤，不当作无历史", () => {
   assert.equal(s.kind, "push");
   assert.equal(s.w, 60);
 });
+t("progression：同一重量连续两次不到下限 → 减载到 2.5kg 档", () => {
+  const last = [{ w: 40, r: 6 }, { w: 40, r: 6 }, { w: 40, r: 6 }];
+  const prev = [{ w: 40, r: 7 }, { w: 40, r: 6 }];
+  const s = C.progression("3×8–12", last, prev);
+  assert.equal(s.kind, "deload");
+  assert.equal(s.w, 35);
+});
+t("progression：只有一次不到下限 → 不减载（grind）", () => {
+  const s = C.progression("3×8–12", [{ w: 40, r: 6 }], []);
+  assert.equal(s.kind, "grind");
+  assert.equal(s.w, 40);
+});
+t("progression：两次不到下限但重量不同 → 不减载（grind）", () => {
+  const s = C.progression("3×8–12", [{ w: 42.5, r: 6 }], [{ w: 40, r: 6 }]);
+  assert.equal(s.kind, "grind");
+});
+t("progression：上次到了下限 → 减载条件不成立（push）", () => {
+  const last = [{ w: 40, r: 9 }];
+  const prev = [{ w: 40, r: 5 }];
+  const s = C.progression("3×8–12", last, prev);
+  assert.equal(s.kind, "push");
+});
+t("deloadWeight：10% 减重取 2.5kg 档", () => {
+  assert.equal(C.deloadWeight(40), 35);
+  assert.equal(C.deloadWeight(60), 55);
+  assert.equal(C.deloadWeight(100), 90);
+  assert.equal(C.deloadWeight(0), 0);
+});
+t("personalRecords：跨会话取最佳一组（Epley）", () => {
+  const recs = C.personalRecords([
+    { date: "2026-10-01", entries: [{ ex: "squat", name: "杠铃深蹲", sets: [{ w: 80, r: 5 }, { w: 80, r: 5 }] }] },
+    { date: "2026-10-15", entries: [{ ex: "squat", name: "杠铃深蹲", sets: [{ w: 85, r: 3 }] }] },
+  ]);
+  assert.equal(recs.length, 1);
+  const r = recs[0];
+  assert.equal(r.count, 2);
+  assert.equal(r.lastDate, "2026-10-15");
+  /* 85×3 的 Epley（93.5）略高于 80×5（93.3）——按公式谁高算谁 */
+  assert.equal(r.best.w, 85);
+  assert.equal(r.best.r, 3);
+  assert.equal(r.best.e1rm, 93.5);
+  assert.equal(r.maxW, 85);
+});
+t("personalRecords：13 次以上的组不算 1RM（Epley 高估），只记最大重量", () => {
+  const recs = C.personalRecords([
+    { date: "2026-10-10", entries: [{ ex: "bench", name: "杠铃卧推", sets: [{ w: 60, r: 15 }] }] },
+  ]);
+  assert.equal(recs[0].best, null);
+  assert.equal(recs[0].maxW, 60);
+  assert.equal(recs[0].maxWr, 15);
+});
+t("personalRecords：自重动作与空记录不参与", () => {
+  const recs = C.personalRecords([
+    { date: "2026-10-10", entries: [{ ex: "plank", name: "平板支撑", sets: [{ w: 0, r: 0 }] }, { ex: "pushup", name: "俯卧撑", sets: [{ w: 0, r: 20 }] }] },
+    { date: "2026-10-11", entries: [{ ex: "plank", name: "平板支撑", sets: [] }] },
+  ]);
+  assert.deepEqual(recs, []);
+});
+t("personalRecords：空输入返回空数组", () => assert.deepEqual(C.personalRecords([]), []));
 
 console.log("─".repeat(50));
 console.log(`合计 ${passed + failed} 项 · 通过 ${passed} · 失败 ${failed}`);

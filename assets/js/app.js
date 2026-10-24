@@ -289,13 +289,19 @@ function navOn() {
 /* ---------- 首页 ---------- */
 function initHome() {
   var exs = window.FIT_EXERCISES || [], pns = window.FIT_PLANS || [];
-  var cs = (window.FIT_VIDEOS || { creators: [] }).creators;
-  var vn = 0; cs.forEach(function (c) { vn += (c.videos || []).length; });
   var set = function (id, v) { var el = $("#" + id); if (el) el.textContent = v; };
   set("stEx", exs.length + " 个"); set("stPlans", pns.length + " 套");
-  set("stCreators", cs.length + " 位"); set("stVideos", vn + " 条");
-  var G = window.FIT_GLOSSARY || {};
-  set("stTerms", (G.terms || []).length + " 条"); set("stFaq", (G.faqs || []).length + " 条");
+  /* v1.2：首页不再装载创作者/术语数据（省两次脚本下载）——这四个统计数字由构建层
+     烘焙进 HTML；只有数据真的在场时才回写，避免把烘焙好的数字覆盖成 0 */
+  if (window.FIT_VIDEOS) {
+    var cs = window.FIT_VIDEOS.creators || [];
+    var vn = 0; cs.forEach(function (c) { vn += (c.videos || []).length; });
+    set("stCreators", cs.length + " 位"); set("stVideos", vn + " 条");
+  }
+  if (window.FIT_GLOSSARY) {
+    var G = window.FIT_GLOSSARY;
+    set("stTerms", (G.terms || []).length + " 条"); set("stFaq", (G.faqs || []).length + " 条");
+  }
   var pick = exs[Math.floor(Math.random() * exs.length)];
   var we = $("#todayEx");
   if (we && pick) {
@@ -1136,15 +1142,15 @@ function initLog() {
   function currentPlan() { return plans.filter(function (p) { return p.id === planEl.value; })[0] || plans[0]; }
   function trainingDays(p) { return (p.schedule || []).filter(function (d) { return d.items && d.items.length; }); }
   function renumber(box) { $$(".setrow", box).forEach(function (r, i) { var ix = $(".idx", r); if (ix) ix.textContent = i + 1; }); }
-  /* v16：查该动作最近一次记录（用于 placeholder 提示 + 一键沿用） */
-  function lastEntryFor(exId) {
-    var arr = sessions();
-    for (var i = 0; i < arr.length; i++) {
-      var s = arr[i], hit = null;
-      (s.entries || []).forEach(function (en) { if (en.ex === exId && !hit) hit = en; });
-      if (hit && hit.sets && hit.sets.length) return { date: String(s.date || "").slice(5), sets: hit.sets };
+  /* v16：查该动作最近一/两次记录（v1.2：带上上次用于平台期减载判定） */
+  function lastTwoFor(exId) {
+    var arr = sessions(), out = [];
+    for (var i = 0; i < arr.length && out.length < 2; i++) {
+      var hit = null;
+      (arr[i].entries || []).forEach(function (en) { if (en.ex === exId && !hit) hit = en; });
+      if (hit && hit.sets && hit.sets.length) out.push({ date: String(arr[i].date || "").slice(5), sets: hit.sets });
     }
-    return null;
+    return out;
   }
   function addSet(box) {
     var wrap = $(".sets", box);
@@ -1184,14 +1190,16 @@ function initLog() {
     if (!d) { itemsEl.innerHTML = '<div class="hint">这个计划没有可记录的训练日，换一个计划试试。</div>'; updateSummary(); return; }
     itemsEl.innerHTML = d.items.map(function (it, idx) {
       var e = exById(it.ex);
-      var last = lastEntryFor(it.ex);
+      var lasts = lastTwoFor(it.ex);
+      var last = lasts[0] || null;
       var lastAttr = last ? ' data-last="' + encodeURIComponent(JSON.stringify(last.sets)) + '"' : "";
       var lastBar = last
         ? '<div class="lastbar"><span class="lt">上次 ' + esc(last.date) + "：" + last.sets.map(function (x) { return (x.w || 0) + "×" + (x.r || 0); }).join(" / ")
           + '</span><button class="btn sm uselast" type="button" title="把上次的重量与次数填进右边各行">沿用上次</button></div>'
         : "";
-      /* v1.1：双重渐进建议——计划的「做到上限再加重」规则落成实时提示（纯函数在 calc.js，可单测） */
-      var sug = window.IG_CALC && IG_CALC.progression ? IG_CALC.progression(it.sets, last && last.sets) : null;
+      /* v1.1：双重渐进建议——计划的「做到上限再加重」规则落成实时提示（纯函数在 calc.js，可单测）
+         v1.2：传入上上次记录，同一重量连续两次没到下限时按计划规则建议减载 */
+      var sug = window.IG_CALC && IG_CALC.progression ? IG_CALC.progression(it.sets, last && last.sets, lasts[1] && lasts[1].sets) : null;
       var sugBar = sug
         ? '<div class="sugbar"><span class="sg">💡 ' + esc(sug.msg) + "</span>"
           + (sug.w > 0 ? '<button class="btn sm sugfill" type="button" data-w="' + sug.w + '" title="把建议重量填进右边各行（次数自己填，做到上限再加重）">填入建议重量</button>' : "")
@@ -1328,10 +1336,49 @@ function initLog() {
   var trSel = $("#trEx");
   if (trSel) trSel.addEventListener("change", renderTrends);
 
+  /* —— 个人纪录（v1.2）：每个动作的历史最佳一组，Epley 只统计 1–12 次的组 —— */
+  function renderPRs() {
+    var box = $("#prPanel");
+    if (!box) return;
+    var recs = window.IG_CALC && IG_CALC.personalRecords ? IG_CALC.personalRecords(sessions()) : [];
+    if (!recs.length) {
+      box.innerHTML = '<div class="empty" style="padding:22px 12px">还没有带重量的记录——保存第一次训练后，这里会出现每个动作的历史最佳一组。</div>';
+      return;
+    }
+    recs = recs.slice().sort(function (a, b) { return String(b.lastDate).localeCompare(String(a.lastDate)); });
+    var now = Date.now();
+    box.innerHTML = recs.map(function (r) {
+      var best = r.best
+        ? "<b>" + esc(r.best.w) + "</b> kg × <b>" + esc(r.best.r) + "</b> 次 · 估算 1RM ≈ <b>" + esc(r.best.e1rm) + "</b> kg"
+        : "最大 <b>" + esc(r.maxW) + "</b> kg × <b>" + esc(r.maxWr) + "</b> 次（次数超出 1–12 次，不做 1RM 估算）";
+      var fresh = r.best && r.count > 1 && (now - new Date(r.best.date + "T00:00:00").getTime()) < 7 * 86400000;
+      return '<div class="prrow"><span class="prname">' + esc(r.name) + "</span>"
+        + '<span class="prbest">' + best + (fresh ? '<em class="prnew">近 7 天刷新</em>' : "") + "</span>"
+        + '<span class="prmeta">练过 ' + esc(r.count) + " 次 · 最近 " + esc(String(r.lastDate).slice(5)) + "</span>"
+        + '<button class="btn sm prtr" type="button" data-prtr="' + esc(r.ex) + '" title="在上方折线图里看这个动作的 1RM 趋势">看趋势</button></div>';
+    }).join("");
+  }
+  var prBox = $("#prPanel");
+  if (prBox) prBox.addEventListener("click", function (ev) {
+    var b = ev.target.closest("[data-prtr]");
+    if (!b || !trSel) return;
+    var exId = b.getAttribute("data-prtr");
+    for (var i = 0; i < trSel.options.length; i++) {
+      if (trSel.options[i].value === exId) {
+        trSel.selectedIndex = i;
+        renderTrends();
+        var card = trSel.closest(".card");
+        if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
+        break;
+      }
+    }
+  });
+
   function sessions() { var v = LS.get(LOG_KEY, []); return Object.prototype.toString.call(v) === "[object Array]" ? v : []; }
   function sessionStats(s) { return window.IG_CALC.sessionStats(s); }
   function renderHistory() {
     renderTrends();
+    renderPRs();
     var list = sessions();
     if (!list.length) { histEl.innerHTML = '<div class="empty">还没有记录。练完一次，填上重量与次数点保存，这里就会长出来。</div>'; return; }
     histEl.innerHTML = list.map(function (s, i) {

@@ -48,10 +48,10 @@
   <div class="home-stats" aria-live="polite">
     <div class="stat"><div class="v num" id="stEx">—</div><div class="k">精选动作（含要点/错误/组次）</div></div>
     <div class="stat"><div class="v num" id="stPlans">—</div><div class="k">训练计划（新手到进阶）</div></div>
-    <div class="stat"><div class="v num" id="stCreators">—</div><div class="k">四平台精选创作者</div></div>
-    <div class="stat"><div class="v num" id="stVideos">—</div><div class="k">已核验视频/内容链接</div></div>
-    <div class="stat"><div class="v num" id="stTerms">—</div><div class="k">健身术语（讲人话版）</div></div>
-    <div class="stat"><div class="v num" id="stFaq">—</div><div class="k">新手高频问答</div></div>
+    <div class="stat"><div class="v num" id="stCreators">26 位</div><div class="k">四平台精选创作者</div></div>
+    <div class="stat"><div class="v num" id="stVideos">35 条</div><div class="k">已核验视频/内容链接</div></div>
+    <div class="stat"><div class="v num" id="stTerms">31 条</div><div class="k">健身术语（讲人话版）</div></div>
+    <div class="stat"><div class="v num" id="stFaq">12 条</div><div class="k">新手高频问答</div></div>
   </div>
 </div></section>
 
@@ -112,12 +112,8 @@
 <script defer src="assets/js/data-plans-b.js"></script>
 <script defer src="assets/js/data-plans-c.js"></script>
 <script defer src="assets/js/data-plans-d.js"></script>
-<script defer src="assets/js/data-videos-a.js"></script>
-<script defer src="assets/js/data-videos-b.js"></script>
-<script defer src="assets/js/data-videos-c.js"></script>
-<script defer src="assets/js/data-videos-d.js"></script>
-<script defer src="assets/js/data-glossary-a.js"></script>
-<script defer src="assets/js/data-glossary-b.js"></script>
+<!-- v1.2：首页不再装载 data-videos-*/data-glossary-*（省约 30KB）——
+     创作者/视频/术语/FAQ 四个统计数字由构建层烘焙进下方 stat 区，initHome 只在数据在场时才回写 -->
 <script defer src="assets/js/data-evidence.js"></script>
 <script defer src="assets/js/calc.js"></script>
 <script defer src="assets/js/app.js"></script>

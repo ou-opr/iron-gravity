@@ -820,6 +820,25 @@ body.light .sugbar .sg{color:#7a4a00}
 }
 body.light .uptoast{background:rgba(255,255,255,.97);color:#1a2233;box-shadow:0 12px 40px rgba(0,0,0,.18)}
 
+/* ---------- v1.2：个人纪录面板 ---------- */
+.prlist{display:flex;flex-direction:column}
+.prrow{
+  display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;
+  padding:9px 2px;border-bottom:1px dashed var(--line);font-size:13.5px;
+}
+.prrow:last-child{border-bottom:0}
+.prrow .prname{font-weight:800;min-width:7em}
+.prrow .prbest{color:var(--t2);font-variant-numeric:tabular-nums}
+.prrow .prbest b{color:var(--acc)}
+.prrow .prmeta{margin-left:auto;color:var(--mut);font-size:12.5px;font-variant-numeric:tabular-nums}
+.prrow .prtr{padding:2px 9px;min-height:0;font-size:12px}
+.prnew{
+  display:inline-block;margin-left:10px;padding:1px 8px;border-radius:999px;
+  font-size:11.5px;font-weight:800;font-style:normal;
+  background:rgba(198,255,61,.14);color:var(--acc);border:1px solid rgba(198,255,61,.3);
+}
+body.light .prnew{background:rgba(63,125,12,.1);color:var(--acc-d);border-color:rgba(63,125,12,.28)}
+
 /* ---------- v16：组间休息计时器 ---------- */
 .rest{display:flex;flex-direction:column;gap:10px}
 .resttime{

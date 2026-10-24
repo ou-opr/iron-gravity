@@ -320,6 +320,13 @@ function testTrend() {
         step("次数未被预填", $(".lgitem .setrow .r").value === "", "实际「" + $(".lgitem .setrow .r").value + "」");
       }
     });
+    /* v1.2 新增：个人纪录面板 */
+    tryStep("个人纪录面板", function () {
+      var rows = $$("#prPanel .prrow");
+      step("出现纪录行", rows.length >= 1, rows.length + " 行");
+      step("纪录含估算 1RM（65×8 ≈ 82.3）", $("#prPanel").textContent.indexOf("82.3") > -1, $("#prPanel").textContent.replace(/\s+/g, " ").slice(0, 70));
+      step("有「看趋势」入口", !!$("#prPanel [data-prtr]"));
+    });
     tryStep("浅色/深色切换", function () {
       var btn = $("#themeBtn");
       step("主题按钮已注入", !!btn);
@@ -332,7 +339,27 @@ function testTrend() {
       /* 断言「切回」而不是「切回深色」：CI（Ubuntu）默认浅色，写死深色会假失败 */
       step("可切回原主题", d.body.classList.contains("light") === before);
     });
-    testDetail();
+    /* v1.2 新增：平台期减载建议——同一重量连续两次没到下限 → 按计划规则减 10%（种入两条 db-bench 失败记录再重载） */
+    tryStep("种入平台期记录", function () {
+      var seeded = [
+        { id: 2, date: "2026-10-23", plan: "beginner", planName: "新手全身启航", day: "周一 · 全身 A", entries: [{ ex: "db-bench", name: "哑铃卧推", sets: [{ w: 40, r: 6 }, { w: 40, r: 6 }, { w: 40, r: 6 }] }] },
+        { id: 1, date: "2026-10-20", plan: "beginner", planName: "新手全身启航", day: "周一 · 全身 A", entries: [{ ex: "db-bench", name: "哑铃卧推", sets: [{ w: 40, r: 6 }, { w: 40, r: 6 }, { w: 40, r: 6 }] }] }
+      ];
+      w.localStorage.setItem("ig_log_sessions", JSON.stringify(seeded));
+    });
+    loadPage("../log.html", function (w2, d2) {
+      var $2 = function (s) { return d2.querySelector(s); };
+      var bench = $2('.lgitem[data-ex="db-bench"]');
+      var sg2 = bench && bench.querySelector(".sugbar");
+      step("减载建议出现（40 连续两次 ×6 < 8）", !!sg2 && sg2.textContent.indexOf("减到") > -1, sg2 ? sg2.textContent.replace(/\s+/g, " ").slice(0, 66) : "无");
+      var btn2 = bench && bench.querySelector(".sugfill");
+      step("减载重量 35（40×0.9 取 2.5kg 档）", !!btn2 && btn2.getAttribute("data-w") === "35", btn2 ? "data-w=" + btn2.getAttribute("data-w") : "无按钮");
+      if (btn2) {
+        btn2.click();
+        step("填入减载重量（35）", $2('.lgitem[data-ex="db-bench"] .setrow .w').value === "35", "实际「" + $2('.lgitem[data-ex="db-bench"] .setrow .w').value + "」");
+      }
+      testDetail();
+    });
   });
 }
 
@@ -400,6 +427,9 @@ function testDetail() {
                           units.push(v + " | " + k);
                         });
                         step("P1 修复：首页统计单位不重复", !dup, units.join(" ; "));
+                        /* v1.2 新增：统计数字由构建层烘焙进 HTML（首页不再装载数据脚本） */
+                        var vC = dH.getElementById("stCreators").textContent, vV = dH.getElementById("stVideos").textContent;
+                        step("v1.2：首页统计已烘焙", /^\d+ 位$/.test(vC) && /^\d+ 条$/.test(vV), vC + " / " + vV);
                         /* ---- v12：无障碍与代码质量回归 ---- */
                         step("v12：首页跳过链接 + #main 锚点", !!dH.querySelector("a.skip") && !!dH.querySelector("#main"), "");
                         var cur = dH.querySelector('.nav a[aria-current="page"]');

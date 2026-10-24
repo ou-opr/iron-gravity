@@ -1,17 +1,17 @@
 # 维护手册 · MAINTENANCE
 
-> **基线：v1.1.0（2026-10-24）**。仓库历史自 v1.0.0 重置起算，之后每次发版追加提交。
+> **基线：v1.2.0（2026-10-24）**。仓库历史自 v1.0.0 重置起算，之后每次发版追加提交。
 > 本文档说明「日常改什么、跑什么门禁、怎么发版、什么需要定期看」。
 
 ## 一、基线数字
 
-| 项 | v1.1.0 |
+| 项 | v1.2.0 |
 |---|---|
-| 跟踪文件 | 175 |
-| `.git` | 约 950 KB |
+| 跟踪文件 | 171 |
+| `.git` | 约 1.0 MB |
 | 页面 | 10 |
 | 内容规模 | 60 动作 · 6 计划 · 8 主张 × 11 文献 · 60 注意人群 · 23 退阶 · 61 条教学视频 |
-| 回归链 | 11 项（单测 37 项 · 冒烟 117 项 · axe 20 组合 = 10 页 × 深/浅） |
+| 回归链 | 11 项（单测 46 项 · 冒烟 124 项 · axe 20 组合 = 10 页 × 深/浅） |
 | 线上 | https://ou-opr.github.io/iron-gravity/ |
 
 ## 二、日常改动：改哪里 → 跑什么
@@ -21,6 +21,7 @@
 | 页面标题 / 描述 / 页脚第三列 | `pages.config.json` → `npm run build` | `npm test` |
 | 导航 | `partials/nav.part.html` → `npm run build` | `npm test` |
 | 新增 / 修改动作 | `assets/js/data-exercises-*.js`，同步 `data-muscles-map.js`（肌群映射）与 `data-evidence.js`（注意人群 / 退阶 / 视频） | `npm test` |
+| 创作者 / 视频 / 术语 / FAQ 数据 | `assets/js/data-videos-*.js` / `data-glossary-*.js` → **`npm run build`**（v1.2 起首页统计数字是构建期烘焙的，漏跑会被 `npm test` 的构建一致性抓住） | `npm test` |
 | 新增证据主张或文献 | `assets/js/data-evidence.js` 的 `IG_EVIDENCE`（PMID 必须实际核过） | `npm run validate` + `npm test` |
 | 样式 / 布局 | `assets/css/style.css`（改完记得深色与浅色都看） | `npm test`（含 axe 双主题） |
 | 换域名部署 | `node tools/set-domain.mjs <https://域名>` | `npm test` |

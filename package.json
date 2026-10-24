@@ -1,6 +1,6 @@
 {
   "name": "iron-gravity",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "铁引力 IRON GRAVITY —— 中文循证健身指南（纯静态、零运行时依赖、双击即用）",
   "license": "SEE LICENSE IN LICENSE",

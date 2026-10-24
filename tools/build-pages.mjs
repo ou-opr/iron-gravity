@@ -17,6 +17,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = new Set(process.argv.slice(2));
@@ -115,5 +116,40 @@ if (CHECK && changed.length) {
         else { fs.writeFileSync(swPath, out, "utf8"); console.log(`  sw.js 版本 → v${pkg.version}`); }
       }
     }
+  }
+}
+
+/* ---- 首页统计数字烘焙（v1.2）----
+   index.html 不再装载 data-videos-* / data-glossary-*（省约 30KB），但首页要显示
+   「创作者/视频/术语/FAQ」四个计数。这里在构建期把数据文件在 Node 里跑一遍，
+   把真实计数写进首页 stat 区的占位（幂等）；改了数据没重跑构建会被 --check 抓住。 */
+{
+  const win = {};
+  globalThis.window = win;
+  for (const f of ["data-videos-a", "data-videos-b", "data-videos-c", "data-videos-d", "data-glossary-a", "data-glossary-b"]) {
+    createRequire(path.join(root, "package.json"))(path.join(root, "assets/js", f + ".js"));
+  }
+  const creators = (win.FIT_VIDEOS || { creators: [] }).creators || [];
+  const nVideos = creators.reduce((n, c) => n + (c.videos || []).length, 0);
+  const g = win.FIT_GLOSSARY || {};
+  const stats = {
+    stCreators: creators.length + " 位",
+    stVideos: nVideos + " 条",
+    stTerms: (g.terms || []).length + " 条",
+    stFaq: (g.faqs || []).length + " 条",
+  };
+  const f = path.join(root, "index.html");
+  let src = fs.readFileSync(f, "utf8");
+  let touched = 0;
+  for (const [id, val] of Object.entries(stats)) {
+    const re = new RegExp('(<div class="v num" id="' + id + '">)[^<]*(</div>)');
+    if (!re.test(src)) { console.error(`✗ index.html 找不到统计位 #${id}`); process.exitCode = 1; continue; }
+    const out = src.replace(re, `$1${val}$2`);
+    if (out !== src) touched++;
+    src = out;
+  }
+  if (touched) {
+    if (CHECK) { console.error("✗ index.html 的统计数字与数据文件不一致 —— 请运行 `node tools/build-pages.mjs` 后提交"); process.exitCode = 1; }
+    else { fs.writeFileSync(f, src, "utf8"); console.log(`  首页统计烘焙：${Object.entries(stats).map(([k, v]) => `${k}=${v}`).join(" · ")}`); }
   }
 }

@@ -112,9 +112,17 @@
     return Math.round((W + inc) * 10) / 10;
   }
 
-  /* 依据计划目标 + 上次各组的 {w, r}，给出本次建议。
-   * 判定只看负重 >0 的组（自重动作单独谈次数）；返回 { kind, w, msg }，w 为建议填入的重量（0 = 无重量可填）。 */
-  function progression(target, lastSets) {
+  /* 减重档位：对应计划规则里的「减重 10% 重新爬坡」，取整到 2.5kg 档 */
+  function deloadWeight(w) {
+    var W = +w || 0;
+    if (W <= 0) return 0;
+    return Math.round(W * 0.9 / 2.5) * 2.5;
+  }
+
+  /* 依据计划目标 + 最近两次的各组 {w, r}，给出本次建议。
+   * 判定只看负重 >0 的组（自重动作单独谈次数）；返回 { kind, w, msg }，w 为建议填入的重量（0 = 无重量可填）。
+   * v1.2 新增平台期减载：同一重量连续两次都没碰到区间下限 → 按计划规则减重 10% 重新爬坡。 */
+  function progression(target, lastSets, prevSets) {
     var tgt = parseTargetSets(target);
     if (!tgt) return null;
     var sets = (lastSets || []).filter(function (x) { return x && ((+x.r || 0) > 0 || (+x.w || 0) > 0); });
@@ -139,10 +147,52 @@
       var nw = nextWeight(W);
       return { kind: "up", w: nw, msg: "上次 " + W + " kg 全部到上限 " + tgt.max + " 次：本次可加重到 " + nw + " kg" };
     }
-    if (allMin) {
-      return { kind: "push", w: W, msg: "沿用 " + W + " kg：每组往上限 " + tgt.max + " 次推，全到了再加重" };
+    if (!allMin) {
+      /* 平台期判定：上次有组没到下限，且上上次同一重量也全军没到下限 → 减载 */
+      var pWSets = (prevSets || []).filter(function (x) { return x && (+x.w || 0) > 0; });
+      var pW = 0;
+      pWSets.forEach(function (x) { if ((+x.w || 0) > pW) pW = +x.w; });
+      var pAllBad = pW > 0 && pWSets.every(function (x) { return (+x.r || 0) < tgt.min; });
+      if (pW === W && pAllBad) {
+        var dw = deloadWeight(W);
+        return { kind: "deload", w: dw, msg: "同一重量连续两次没到下限 " + tgt.min + " 次：按计划规则减到 " + dw + " kg 重新爬坡" };
+      }
+      return { kind: "grind", w: W, msg: "上次有组没到下限 " + tgt.min + " 次：沿用 " + W + " kg 把动作质量做稳（吃力就减 10%）" };
     }
-    return { kind: "grind", w: W, msg: "上次有组没到下限 " + tgt.min + " 次：沿用 " + W + " kg 把动作质量做稳（吃力就减 10%）" };
+    return { kind: "push", w: W, msg: "沿用 " + W + " kg：每组往上限 " + tgt.max + " 次推，全到了再加重" };
+  }
+
+  /* ---- 个人纪录（v1.2）----
+   * 从全部训练会话里给每个动作算「历史最佳一组」：
+   * 估算 1RM（Epley）只统计 1–12 次的组——高次数下 Epley 会明显高估，不冒充精确；
+   * 全是自重（无负重）或没录入重量的动作不参与排名；返回数组，不排序（展示端自行排）。 */
+  function personalRecords(sessions) {
+    var by = {};
+    ((sessions || [])).forEach(function (s) {
+      var date = String((s && s.date) || "");
+      ((s && s.entries) || []).forEach(function (en) {
+        if (!en || !en.ex) return;
+        var rec = by[en.ex] || (by[en.ex] = { ex: en.ex, name: en.name || en.ex, count: 0, lastDate: "", best: null, maxW: 0, maxWr: 0 });
+        var hasWeighted = false;
+        (en.sets || []).forEach(function (x) {
+          var w = +x.w || 0, r = +x.r || 0;
+          if (w <= 0 || r <= 0) return;
+          hasWeighted = true;
+          if (w > rec.maxW) { rec.maxW = w; rec.maxWr = r; }
+          if (r <= 12) {
+            var e = Math.round(epley(w, r) * 10) / 10;
+            if (!rec.best || e > rec.best.e1rm) {
+              rec.best = { w: w, r: r, e1rm: e, date: date };
+            }
+          }
+        });
+        if (hasWeighted) {
+          rec.count++;
+          if (date > rec.lastDate) rec.lastDate = date;
+        }
+      });
+    });
+    return Object.keys(by).map(function (k) { return by[k]; }).filter(function (r) { return r.count > 0; });
   }
 
   return {
@@ -157,6 +207,8 @@
     isEffectiveSet: isEffectiveSet,
     parseTargetSets: parseTargetSets,
     nextWeight: nextWeight,
-    progression: progression
+    deloadWeight: deloadWeight,
+    progression: progression,
+    personalRecords: personalRecords
   };
 });
