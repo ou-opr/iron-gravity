@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>og 分享图卡样（工具页，由 gen-og.mjs 渲染成 1200×630 PNG）</title>
+<style>
+  /* 与站点同源的设计语言：#0a0b10 铁馆底 + 荧光青绿主色 + 橙色点缀，系统字体栈 */
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{width:1200px;height:630px;overflow:hidden}
+  body{
+    font-family:"Segoe UI","Microsoft YaHei","PingFang SC",system-ui,sans-serif;
+    background:#0a0b10;color:#e9ecf4;position:relative;
+  }
+  /* 两团极低透明度的品牌色光晕，避免纯底太死 */
+  .glow-a{position:absolute;left:-180px;top:-220px;width:640px;height:640px;border-radius:50%;
+    background:radial-gradient(circle,rgba(198,255,61,.14),transparent 68%)}
+  .glow-b{position:absolute;right:-200px;bottom:-260px;width:700px;height:700px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,106,43,.10),transparent 68%)}
+  .wrap{position:relative;height:100%;display:flex;flex-direction:column;justify-content:center;
+    padding:0 96px}
+  .brand{display:flex;align-items:center;gap:26px}
+  .mark{width:92px;height:92px;border-radius:22px;background:#141824;border:1px solid #242b3d;
+    display:grid;place-items:center}
+  .mark svg{width:64px;height:64px}
+  h1{font-size:110px;font-weight:900;letter-spacing:2px;line-height:1;color:#e9ecf4}
+  .en{margin-top:14px;font-size:26px;font-weight:800;letter-spacing:12px;color:#c6ff3d}
+  .tagline{margin-top:34px;font-size:30px;font-weight:600;color:#98a2b8}
+  .tagline b{color:#e9ecf4}
+  .chips{margin-top:44px;display:flex;gap:16px}
+  .chip{padding:10px 22px;border-radius:999px;font-size:21px;font-weight:700;
+    background:rgba(198,255,61,.10);border:1px solid rgba(198,255,61,.30);color:#c6ff3d}
+  .chip.o{background:rgba(255,106,43,.10);border-color:rgba(255,106,43,.32);color:#ff8a5c}
+  .fine{position:absolute;left:96px;bottom:44px;font-size:18px;color:#7d879e;letter-spacing:1px}
+  .url{position:absolute;right:96px;bottom:44px;font-size:18px;color:#7d879e;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+  <div class="glow-a"></div>
+  <div class="glow-b"></div>
+  <div class="wrap">
+    <div class="brand">
+      <div class="mark">
+        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <g stroke="#c6ff3d" stroke-width="6" stroke-linecap="round" fill="none">
+            <path d="M20 20v24"/><path d="M44 20v24"/>
+            <path d="M12 26v12"/><path d="M52 26v12"/>
+            <path d="M20 32h24"/>
+          </g>
+        </svg>
+      </div>
+      <h1>铁引力</h1>
+    </div>
+    <div class="en">IRON GRAVITY</div>
+    <div class="tagline"><b>中文循证健身指南</b> —— 对抗重力，就是训练本身</div>
+    <div class="chips">
+      <span class="chip">60 个精选动作</span>
+      <span class="chip">6 套训练计划</span>
+      <span class="chip">8 条循证主张 × 11 篇文献</span>
+      <span class="chip o">离线可用</span>
+    </div>
+    <div class="fine">练什么 · 怎么练 · 吃什么 · 跟谁学，一条路径从零到进阶</div>
+    <div class="url">ou-opr.github.io/iron-gravity</div>
+  </div>
+</body>
+</html>

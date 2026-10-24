@@ -801,6 +801,25 @@ details.faq .a{animation:faq-in .25s var(--ease-out) both}
 .lastbar .uselast{padding:3px 10px;min-height:0;font-size:12.5px}
 body.light .lastbar{background:rgba(63,125,12,.06);border-color:rgba(63,125,12,.18)}
 
+/* ---------- v1.1：渐进超负荷建议条 + 新版本提示 ---------- */
+.sugbar{
+  display:flex;gap:10px;align-items:center;flex-wrap:wrap;
+  margin:0 0 8px;padding:6px 10px;border-radius:8px;
+  background:rgba(255,176,32,.08);border:1px solid rgba(255,176,32,.22);
+  font-size:12.8px;
+}
+.sugbar .sg{color:var(--warn);flex:1;min-width:0}
+.sugbar .sugfill{padding:3px 10px;min-height:0;font-size:12.5px}
+body.light .sugbar{background:rgba(185,122,0,.08);border-color:rgba(185,122,0,.28)}
+body.light .sugbar .sg{color:#7a4a00}
+.uptoast{
+  position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:90;
+  display:flex;gap:14px;align-items:center;padding:12px 18px;border-radius:14px;
+  background:var(--card2);border:1px solid var(--acc);color:var(--txt);
+  font-size:14px;font-weight:700;box-shadow:0 12px 40px rgba(0,0,0,.5);
+}
+body.light .uptoast{background:rgba(255,255,255,.97);color:#1a2233;box-shadow:0 12px 40px rgba(0,0,0,.18)}
+
 /* ---------- v16：组间休息计时器 ---------- */
 .rest{display:flex;flex-direction:column;gap:10px}
 .resttime{

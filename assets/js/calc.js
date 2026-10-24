@@ -90,6 +90,61 @@
     return !!(x && (x.done || (x.w > 0 && x.r > 0)));
   }
 
+  /* ---- 双重渐进建议（v1.1）----
+   * 计划里「先把每组做到区间上限次数，再加重」的规则，做成可单测的纯函数。
+   * 目标串形如 "3×8–12" / "5×5" / "3×8–10/侧"，带备注（"3×8–10（轻）"）可解析；
+   * 计时类（"3×45 秒"、"30–40 秒/侧 ×3"）与 RPE 类（"3×力竭前 2"）返回 null，不瞎建议。 */
+  function parseTargetSets(str) {
+    var s = String(str || "").replace(/（[^）]*）/g, "").replace(/\([^)]*\)/g, "").trim();
+    if (!s || /秒/.test(s)) return null;
+    var m = s.match(/^(\d+)\s*×\s*(\d+)(?:\s*[–—-]\s*(\d+))?/);
+    if (!m) return null;
+    var min = +m[2], max = m[3] ? +m[3] : min;
+    if (max < min) max = min;
+    return { sets: +m[1], min: min, max: max };
+  }
+
+  /* 加重档位：对应计划规则里的「+2.5–5%」——大重量取 5kg（约 5%），中重量 2.5kg，轻重量 1kg */
+  function nextWeight(w) {
+    var W = +w || 0;
+    if (W <= 0) return 0;
+    var inc = W >= 40 ? 5 : W >= 10 ? 2.5 : 1;
+    return Math.round((W + inc) * 10) / 10;
+  }
+
+  /* 依据计划目标 + 上次各组的 {w, r}，给出本次建议。
+   * 判定只看负重 >0 的组（自重动作单独谈次数）；返回 { kind, w, msg }，w 为建议填入的重量（0 = 无重量可填）。 */
+  function progression(target, lastSets) {
+    var tgt = parseTargetSets(target);
+    if (!tgt) return null;
+    var sets = (lastSets || []).filter(function (x) { return x && ((+x.r || 0) > 0 || (+x.w || 0) > 0); });
+    if (!sets.length) {
+      return { kind: "first", w: 0, msg: "首次练这个动作：从能标准完成 " + tgt.min + " 次的重量起步，每组留 2–3 次余力" };
+    }
+    var wSets = sets.filter(function (x) { return (+x.w || 0) > 0; });
+    if (!wSets.length) {
+      var bestR = 0;
+      sets.forEach(function (x) { if ((+x.r || 0) > bestR) bestR = +x.r; });
+      var allMax = sets.every(function (x) { return (+x.r || 0) >= tgt.max; });
+      if (allMax) {
+        return { kind: "bw-up", w: 0, msg: "自重已全部到上限 " + tgt.max + " 次：可加负重（背包/弹力带）或换更难的变式" };
+      }
+      return { kind: "bw", w: 0, msg: "自重目标每组 " + tgt.min + "–" + tgt.max + " 次，上次最多 " + bestR + " 次：沿用即可，往上限推" };
+    }
+    var W = 0;
+    wSets.forEach(function (x) { if ((+x.w || 0) > W) W = +x.w; });
+    var allUp = wSets.every(function (x) { return (+x.r || 0) >= tgt.max; });
+    var allMin = wSets.every(function (x) { return (+x.r || 0) >= tgt.min; });
+    if (allUp) {
+      var nw = nextWeight(W);
+      return { kind: "up", w: nw, msg: "上次 " + W + " kg 全部到上限 " + tgt.max + " 次：本次可加重到 " + nw + " kg" };
+    }
+    if (allMin) {
+      return { kind: "push", w: W, msg: "沿用 " + W + " kg：每组往上限 " + tgt.max + " 次推，全到了再加重" };
+    }
+    return { kind: "grind", w: W, msg: "上次有组没到下限 " + tgt.min + " 次：沿用 " + W + " kg 把动作质量做稳（吃力就减 10%）" };
+  }
+
   return {
     bmr: bmr,
     targetKcal: targetKcal,
@@ -99,6 +154,9 @@
     weekStart: weekStart,
     isoLocal: isoLocal,
     sessionStats: sessionStats,
-    isEffectiveSet: isEffectiveSet
+    isEffectiveSet: isEffectiveSet,
+    parseTargetSets: parseTargetSets,
+    nextWeight: nextWeight,
+    progression: progression
   };
 });

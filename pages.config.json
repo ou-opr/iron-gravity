@@ -2,7 +2,7 @@
   "$comment": "页面配置：head 的 title/description/canonical/og 与 footer 第三列。改这里 + 跑 `node tools/build-pages.mjs` 即可同步到 9 个 HTML。",
   "baseUrl": "https://ou-opr.github.io/iron-gravity",
   "verifyMonth": "2026-10",
-  "defaultOgImage": "https://ou-opr.github.io/iron-gravity/assets/img/icon-512.png",
+  "defaultOgImage": "https://ou-opr.github.io/iron-gravity/assets/img/og.png",
   "pages": [
     {
       "slug": "index",

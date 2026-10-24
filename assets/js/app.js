@@ -109,7 +109,7 @@ function staggerIn(root, sel) {
 }
 function countUp(el) {
   if (!el) return;
-  var m = /^(\d+(?:\.\d+)?)(.*)$/.exec(el.textContent || "");
+  var m = String(el.textContent || "").match(/^(\d+(?:\.\d+)?)(.*)$/);
   if (!m || !window.requestAnimationFrame) return;
   var to = parseFloat(m[1]), suffix = m[2] || "";
   if (!isFinite(to) || to <= 0 || prefersReduced()) return;
@@ -980,7 +980,18 @@ function initVideos() {
   if (qs.get("topic")) st.topic = qs.get("topic");
   if (qs.get("fav") === "1") st.fav = true;
 
-  function ytId(u) { var m = /(?:v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/.exec(u); return m ? m[1] : ""; }
+  /* v1.1：站内嵌入 ID 白名单——YouTube ID 固定 11 位、B站 bvid 固定 BV+10 位，
+     装载时就地校验并缓存到 v._embed（null = 不可站内播放，回退「跳平台看」）；
+     后面的渲染与点击只读校验结果、用 DOM API 建 iframe，不把动态值拼进标记字符串 */
+  function ytId(u) { var m = String(u || "").match(/(?:v=|youtu\.be\/)([A-Za-z0-9_-]{11})/); return m ? m[1] : ""; }
+  function bvOk(b) { return !!String(b || "").match(/^BV[0-9A-Za-z]{10}$/); }
+  cs.forEach(function (c) {
+    (c.videos || []).forEach(function (v) {
+      v._embed = (c.platform === "bilibili" && bvOk(v.bvid)) ? { k: "bili", id: v.bvid }
+        : (c.platform === "youtube" && ytId(v.url)) ? { k: "yt", id: ytId(v.url) }
+        : null;
+    });
+  });
   function vidMatches(v) { return st.topic === "全部" ? true : v.topic === st.topic; }
   function cMatches(c) {
     if (st.fav && !favHas(FAV_CR, c.id)) return false;
@@ -999,8 +1010,7 @@ function initVideos() {
   }
   function rowsHTML(c) {
     var rows = (c.videos || []).map(function (v, i) {
-      var embed = (c.platform === "bilibili" && v.bvid) || (c.platform === "youtube" && ytId(v.url));
-      var btn = embed
+      var btn = v._embed
         ? '<button class="play" data-cid="' + c.id + '" data-i="' + i + '" aria-label="站内播放">▶</button>'
         : '<a class="play" href="' + esc(v.url) + '" target="_blank" rel="noopener" aria-label="前往平台观看">↗</a>';
       return '<div class="vrow">' + btn + '<div class="vm">'
@@ -1065,14 +1075,23 @@ function initVideos() {
     var c = cs.filter(function (x) { return x.id === cid; })[0]; if (!c) return;
     var v = (c.videos || [])[idx]; if (!v) return;
     var box = $("#emb-" + cid); if (!box) return;
-    var embed = (c.platform === "bilibili" && v.bvid) || (c.platform === "youtube" && ytId(v.url));
-    if (!embed) { window.open(v.url, "_blank", "noopener"); return; }
+    var e = v._embed;
+    if (!e) { window.open(v.url, "_blank", "noopener"); return; }
     var already = box.classList.contains("on") && box.getAttribute("data-cur") === String(idx);
     if (already) { box.classList.remove("on"); box.innerHTML = ""; box.removeAttribute("data-cur"); return; }
     box.classList.add("on"); box.setAttribute("data-cur", String(idx));
-    box.innerHTML = c.platform === "bilibili"
-      ? '<iframe src="https://player.bilibili.com/player.html?bvid=' + v.bvid + '&autoplay=0&high_quality=1" allowfullscreen loading="lazy" referrerpolicy="no-referrer"></iframe>'
-      : '<iframe src="https://www.youtube.com/embed/' + ytId(v.url) + '" allowfullscreen loading="lazy"></iframe>';
+    /* v1.1：DOM API 建 iframe——src 只接收装载时校验过的白名单 ID */
+    box.innerHTML = "";
+    var fr = document.createElement("iframe");
+    if (e.k === "bili") {
+      fr.setAttribute("src", "https://player.bilibili.com/player.html?bvid=" + e.id + "&autoplay=0&high_quality=1");
+      fr.setAttribute("referrerpolicy", "no-referrer");
+    } else {
+      fr.setAttribute("src", "https://www.youtube.com/embed/" + e.id);
+    }
+    fr.setAttribute("allowfullscreen", "");
+    fr.setAttribute("loading", "lazy");
+    box.appendChild(fr);
     box.scrollIntoView({ behavior: "smooth", block: "nearest" });
   });
   /* 收藏控件（注入在搜索行下方） */
@@ -1171,10 +1190,17 @@ function initLog() {
         ? '<div class="lastbar"><span class="lt">上次 ' + esc(last.date) + "：" + last.sets.map(function (x) { return (x.w || 0) + "×" + (x.r || 0); }).join(" / ")
           + '</span><button class="btn sm uselast" type="button" title="把上次的重量与次数填进右边各行">沿用上次</button></div>'
         : "";
+      /* v1.1：双重渐进建议——计划的「做到上限再加重」规则落成实时提示（纯函数在 calc.js，可单测） */
+      var sug = window.IG_CALC && IG_CALC.progression ? IG_CALC.progression(it.sets, last && last.sets) : null;
+      var sugBar = sug
+        ? '<div class="sugbar"><span class="sg">💡 ' + esc(sug.msg) + "</span>"
+          + (sug.w > 0 ? '<button class="btn sm sugfill" type="button" data-w="' + sug.w + '" title="把建议重量填进右边各行（次数自己填，做到上限再加重）">填入建议重量</button>' : "")
+          + "</div>"
+        : "";
       return '<div class="lgitem" data-i="' + idx + '" data-ex="' + esc(it.ex) + '"' + lastAttr + '>'
         + '<div class="h"><b>' + esc(e ? e.name : it.ex) + '</b><span class="t">目标 ' + esc(it.sets) + "</span>"
         + (e ? '<button class="btn sm" type="button" data-ex="' + e.id + '" style="padding:3px 10px">看要点</button>' : "")
-        + "</div>" + lastBar
+        + "</div>" + lastBar + sugBar
         + '<div class="sets"></div>'
         + '<button class="btn sm addset" type="button">＋ 加一组</button></div>';
     }).join("");
@@ -1204,6 +1230,13 @@ function initLog() {
         if (dn) dn.classList.toggle("on", !!s.done);
       });
       renumber(box);
+      updateSummary();
+      return;
+    }
+    /* v1.1：填入建议重量——只填重量不预填次数：次数是练出来的，预填会把没做到的次数存成记录 */
+    if (e.target.closest(".sugfill")) {
+      var sugW = e.target.closest(".sugfill").getAttribute("data-w") || "";
+      $$(".setrow", box).forEach(function (r) { $(".w", r).value = sugW; });
       updateSummary();
       return;
     }
@@ -2070,7 +2103,28 @@ document.addEventListener("DOMContentLoaded", function () {
      file:// 下浏览器不允许注册 SW（会抛异常），所以按协议判断后跳过。 */
   if ("serviceWorker" in navigator && /^https?:$/.test(location.protocol)) {
     window.addEventListener("load", function () {
-      navigator.serviceWorker.register("sw.js").catch(function () { /* 静默失败，不影响站点 */ });
+      navigator.serviceWorker.register("sw.js").then(function () {
+        /* v1.1：新版本就绪提示。SW 更新换手（controllerchange）且此前已有旧 SW 管着页面时，
+           弹一条可点的提示；不自动刷新——用户可能正练到一半。首次安装不打扰。 */
+        if (!navigator.serviceWorker.controller) return;
+        var armed = true;
+        navigator.serviceWorker.addEventListener("controllerchange", function () {
+          if (!armed || document.getElementById("igUpd")) return;
+          armed = false;
+          var t = document.createElement("div");
+          t.id = "igUpd";
+          t.className = "uptoast";
+          t.setAttribute("role", "status");
+          t.appendChild(document.createTextNode("新版本已就绪"));
+          var b = document.createElement("button");
+          b.className = "btn sm";
+          b.type = "button";
+          b.textContent = "刷新";
+          b.addEventListener("click", function () { location.reload(); });
+          t.appendChild(b);
+          document.body.appendChild(t);
+        });
+      }).catch(function () { /* 静默失败，不影响站点 */ });
     });
   }
 });

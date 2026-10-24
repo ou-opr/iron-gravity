@@ -47,6 +47,8 @@ function testLog() {
     step("本地存储可用", lsOk, "直接读写探针");
     step("日志页已初始化（动作块 > 0）", $$(".lgitem").length > 0, $$(".lgitem").length + " 个动作块");
     step("每组默认 3 行输入", $$(".setrow").length === $$(".lgitem").length * 3, $$(".setrow").length + " 行");
+    /* v1.1 新增：无历史 → 首次训练建议 */
+    step("无历史显示「首次」建议", !!$(".lgitem .sugbar") && $(".lgitem .sugbar").textContent.indexOf("首次") > -1, $(".lgitem .sugbar") ? $(".lgitem .sugbar").textContent.replace(/\s+/g, " ").slice(0, 50) : "无");
     step("计划下拉 6 项", $("#lgPlan") && $("#lgPlan").options.length === 6, $("#lgPlan") ? $("#lgPlan").options.length + " 项" : "无");
     step("历史初始为空态", $("#lgHistory") && $("#lgHistory").textContent.indexOf("还没有记录") > -1);
     tryStep("填写并保存一次训练", function () {
@@ -306,6 +308,18 @@ function testTrend() {
     })(), $("#printReport") ? $("#printReport").querySelectorAll("table tr").length + " 行" : "无");
     step("月历网格完整（≥28 格）", $$("#calGrid .d").length >= 28, $$("#calGrid .d").length + " 格");
     step("月历亮起今天的训练", $$("#calGrid .d.has").length >= 1 && $$("#calGrid .d.today").length === 1, $$("#calGrid .d.has").length + " 天亮起");
+    /* v1.1 新增：渐进超负荷建议（有历史 → 依上限/下限判定；只填重量，次数不预填） */
+    tryStep("渐进超负荷建议", function () {
+      var sg = $(".lgitem .sugbar");
+      step("有历史出现建议条", !!sg, sg ? sg.textContent.replace(/\s+/g, " ").slice(0, 60) : "无");
+      var sf = $(".lgitem .sugfill");
+      step("未到上限 → 给「填入建议重量」按钮（65×8 未到 12 → 沿用 65）", !!sf);
+      if (sf) {
+        sf.click();
+        step("建议重量已填入（65）", $(".lgitem .setrow .w").value === "65", "实际「" + $(".lgitem .setrow .w").value + "」");
+        step("次数未被预填", $(".lgitem .setrow .r").value === "", "实际「" + $(".lgitem .setrow .r").value + "」");
+      }
+    });
     tryStep("浅色/深色切换", function () {
       var btn = $("#themeBtn");
       step("主题按钮已注入", !!btn);

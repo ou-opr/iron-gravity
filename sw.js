@@ -8,7 +8,7 @@
  * 更新：改动站点后把 VERSION 加一，旧缓存会在 activate 阶段被清掉。
  * 本地 file:// 打开时浏览器不允许注册 SW，app.js 里已按协议判断跳过。
  */
-const VERSION = "v1.0.0";
+const VERSION = "v1.1.0";
 const CACHE = "iron-gravity-" + VERSION;
 const SHELL = [
   "./",

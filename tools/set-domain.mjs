@@ -31,7 +31,7 @@ const cfgPath = path.join(root, "pages.config.json");
 const cfg = JSON.parse(fs.readFileSync(cfgPath, "utf8"));
 const old = cfg.baseUrl;
 cfg.baseUrl = base;
-cfg.defaultOgImage = base + "/assets/img/icon-512.png";
+cfg.defaultOgImage = base + "/assets/img/og.png";
 fs.writeFileSync(cfgPath, JSON.stringify(cfg, null, 2) + "\n", "utf8");
 console.log(`pages.config.json: baseUrl ${old} → ${base}`);
 
@@ -67,4 +67,4 @@ const r = spawnSync(process.execPath, [path.join(root, "tools", "build-pages.mjs
 process.stdout.write(r.stdout || "");
 if (r.status !== 0) { process.stderr.write(r.stderr || ""); process.exit(r.status || 1); }
 console.log("✓ 完成：canonical / og:image / sitemap / robots 均已指向 " + base);
-console.log("  提示：Social 分享图建议用 1200×630 的独立图片，替换 assets/img/icon-512.png 后再跑一次本脚本。");
+console.log("  分享图为 1200×630 的 assets/img/og.png（改样式后用 node tools/gen-og.mjs 重新生成）。");

@@ -100,6 +100,68 @@ t("isEffectiveSet：打勾算有效，全空不算", () => {
   assert.equal(C.isEffectiveSet({}), false);
 });
 
+/* ---- 双重渐进建议（v1.1）---- */
+t("parseTargetSets：区间 / 定次 / 单侧 / 带备注", () => {
+  assert.deepEqual(C.parseTargetSets("3×8–12"), { sets: 3, min: 8, max: 12 });
+  assert.deepEqual(C.parseTargetSets("5×5"), { sets: 5, min: 5, max: 5 });
+  assert.deepEqual(C.parseTargetSets("3×8–10/侧"), { sets: 3, min: 8, max: 10 });
+  assert.deepEqual(C.parseTargetSets("3×8–10（轻）"), { sets: 3, min: 8, max: 10 });
+  assert.deepEqual(C.parseTargetSets("3×15（慢速离心 3 秒）"), { sets: 3, min: 15, max: 15 });
+});
+t("parseTargetSets：计时与 RPE 类不解析（返回 null）", () => {
+  assert.equal(C.parseTargetSets("3×45 秒"), null);
+  assert.equal(C.parseTargetSets("3×20–30 秒/侧"), null);
+  assert.equal(C.parseTargetSets("30–40 秒/侧 ×3"), null);
+  assert.equal(C.parseTargetSets("3×力竭前 2"), null);
+  assert.equal(C.parseTargetSets("6 天版按 A 轮再来一次，可换变式"), null);
+  assert.equal(C.parseTargetSets(""), null);
+});
+t("nextWeight：加重档位 1 / 2.5 / 5 kg", () => {
+  assert.equal(C.nextWeight(5), 6);
+  assert.equal(C.nextWeight(15), 17.5);
+  assert.equal(C.nextWeight(30), 32.5);
+  assert.equal(C.nextWeight(60), 65);
+  assert.equal(C.nextWeight(100), 105);
+  assert.equal(C.nextWeight(0), 0);
+});
+t("progression：无历史 → 首次提示", () => {
+  const s = C.progression("3×8–12", []);
+  assert.equal(s.kind, "first");
+  assert.ok(s.msg.indexOf("8") > -1);
+});
+t("progression：全到上限 → 建议加重到下一档", () => {
+  const s = C.progression("3×8–12", [{ w: 60, r: 12 }, { w: 60, r: 12 }, { w: 60, r: 12 }]);
+  assert.equal(s.kind, "up");
+  assert.equal(s.w, 65);
+});
+t("progression：到下限未到上限 → 沿用重量推次数", () => {
+  const s = C.progression("3×8–12", [{ w: 65, r: 8 }, { w: 65, r: 10 }]);
+  assert.equal(s.kind, "push");
+  assert.equal(s.w, 65);
+});
+t("progression：有组低于下限 → 稳质量提示", () => {
+  const s = C.progression("3×8–12", [{ w: 60, r: 6 }, { w: 60, r: 8 }]);
+  assert.equal(s.kind, "grind");
+  assert.equal(s.w, 60);
+});
+t("progression：自重动作只谈次数（全部到上限给进阶提示）", () => {
+  const up = C.progression("3×8–12", [{ w: 0, r: 12 }, { w: 0, r: 12 }]);
+  const mid = C.progression("3×8–12", [{ w: 0, r: 10 }]);
+  assert.equal(up.kind, "bw-up");
+  assert.equal(up.w, 0);
+  assert.equal(mid.kind, "bw");
+  assert.ok(mid.msg.indexOf("10") > -1);
+});
+t("progression：目标解析不了 → 不建议（返回 null）", () => {
+  assert.equal(C.progression("3×45 秒", [{ w: 60, r: 10 }]), null);
+  assert.equal(C.progression("3×力竭前 2", []), null);
+});
+t("progression：空组被过滤，不当作无历史", () => {
+  const s = C.progression("3×8–12", [{ w: 0, r: 0 }, { w: 60, r: 9 }]);
+  assert.equal(s.kind, "push");
+  assert.equal(s.w, 60);
+});
+
 console.log("─".repeat(50));
 console.log(`合计 ${passed + failed} 项 · 通过 ${passed} · 失败 ${failed}`);
 process.exit(failed ? 1 : 0);

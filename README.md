@@ -34,7 +34,7 @@
 | `plans.html` | 6 套训练计划 + 「我的课表」克隆编辑器 + 打卡条 + 打印 | `#<plan-id>` |
 | `nutrition.html` | TDEE 计算器、宏量分配、30 种食物速查、一日食谱生成器、补剂证据等级 | — |
 | `videos.html` | 四平台创作者精选（B站站内播放，其余只链不搬） | — |
-| `log.html` | 训练日志：逐组记录（**自动提示上次重量、一键沿用**）、1RM 估算、**组间休息计时器**、周容量核算（按主目标肌群）、体测、月历、趋势图、打印周报、JSON 备份（含自定义课表与体测） | `?plan=&day=` |
+| `log.html` | 训练日志：逐组记录（**自动提示上次重量、一键沿用、渐进超负荷建议**）、1RM 估算、**组间休息计时器**、周容量核算（按主目标肌群）、体测、月历、趋势图、打印周报、JSON 备份（含自定义课表与体测） | `?plan=&day=` |
 | `glossary.html` | 31 条术语（7 类筛选）+ 12 条新手 FAQ | — |
 | `evidence.html` | **证据与来源**：8 条关键主张 × 11 篇文献（PMID 可点开核对）、A/B/C 证据等级口径、明确列出「哪些内容不是循证的」 | `#claim-volume` 等锚点 |
 | `detail.html` | 动作独立详情页：说明牌图示、要点/错误/组次、**注意人群 / 退阶路径 / 教学视频（60/60 全覆盖）**、替代动作、同肌群推荐、导出 SVG | `?id=`、`?panel=atlas\|part`、`?placard=0`、`?wipe=1` |
@@ -103,14 +103,15 @@ D:\健身\iron gravity\
 ├─ tools/                             # 全部为「可复跑」脚本，不参与站点加载
 │  ├─ check-all.mjs                   # 一键回归（纯 Node，跨平台；不依赖 bash / Python）
 │  ├─ build-pages.mjs                 # 构建层：nav/head/footer 同步进 10 页（幂等，--check 供 CI）
-│  ├─ smoke.html                      # 端到端冒烟（iframe 驱动真实页面，100 项断言）
+│  ├─ smoke.html                      # 端到端冒烟（iframe 驱动真实页面，117 项断言）
 │  ├─ a11y-audit.mjs / a11y-run.html  # 无障碍实测：axe-core × 10 页 WCAG 2.1 A/AA（缺库自动下载）
 │  ├─ validate.mjs                    # 数据自检（计数 + 引用完整性 + 证据/注意人群覆盖）
 │  ├─ selftest.mjs                    # 本地服务器逐页自测（18 个目标）
 │  ├─ check-links.mjs                 # 外链复检（限流串行复核）+ 站内坏链（跳过脚本块）
 │  ├─ set-domain.mjs                  # 部署：一键替换域名（canonical / og:image / sitemap / robots）
+│  ├─ gen-og.mjs                      # 生成 1200×630 的 og 分享图（渲染 tools/og-card.html 截图）
 │  ├─ check-media.mjs                 # 媒体验证：61 条视频走 oEmbed、11 篇文献走 NCBI esummary
-│  ├─ unit-tests.mjs                  # 纯函数单元测试（27 项，node:assert，零框架）
+│  ├─ unit-tests.mjs                  # 纯函数单元测试（37 项，node:assert，零框架）
 │  ├─ lib/chrome.mjs                  # 跨平台 Chrome 定位 + headless DOM 导出
 │  ├─ check-all.sh                    # 兼容入口（内部转 check-all.mjs）
 │  ├─ audit-css-a11y.mjs              # CSS 变量一致性 / 未使用类 / 逐页无障碍静态审计
@@ -152,23 +153,23 @@ npm test                   # 等价于 node tools/check-all.mjs（11 项检查�
 npm run test:offline       # 跳过联网外链（PR 门禁用）
 npm run a11y               # 只跑无障碍实测（axe-core，10 页 × 深/浅 2 主题 = 20 组合）
 npm run check:build        # 只校验页面是否与 partials/config 同步
-node tools/unit-tests.mjs  # 只跑纯函数单元测试（27 项）
+node tools/unit-tests.mjs  # 只跑纯函数单元测试（37 项）
 node tools/check-media.mjs  # 只跑媒体验证（61 条视频 oEmbed + 11 篇 PMID）
 bash tools/check-all.sh review   # 重出图示复核图
 ```
 
-`check-all.mjs` 依次跑：语法（42 文件）→ 纯函数单元测试（27 项）→ 构建一致性 → 几何 → 肌群映射 → 服务器自测（18 目标）→ 数据校验 → 外链 64 条 → **媒体验证（72 条）** → 端到端冒烟 → 无障碍 axe（每页深色与浅色各跑一遍）。
+`check-all.mjs` 依次跑：语法（43 文件）→ 纯函数单元测试（37 项）→ 构建一致性 → 几何 → 肌群映射 → 服务器自测（18 目标）→ 数据校验 → 外链 64 条 → **媒体验证（72 条）** → 端到端冒烟 → 无障碍 axe（每页深色与浅色各跑一遍）。
 Chrome 路径自动探测（`$CHROME` → 各平台常见路径 → PATH），Windows / macOS / Linux 均可复跑；不需要 Git Bash，不需要 Python。
 
-当前基线（2026-10-18，v17）：
+当前基线（2026-10-24，v1.1.0）：
 
 ```
-✓ 语法 42 个文件全过        ✓ 单元测试 27 项全过
+✓ 语法 43 个文件全过        ✓ 单元测试 37 项全过
 ✓ 构建一致性（10 页与 partials 同步）  ✓ 几何自检  ✓ 肌群映射 PASS
 ✓ 服务器自测 18 目标        ✓ 数据校验（60 动作 / 8 主张 / 11 文献 / 60 注意人群 / 23 退阶 / 60 视频）
 ✓ 外链 64 · 失败 0 · 站内坏链 0（海外 CI 上 B 站会回 412 风控，单列不计失败）
 ✓ 媒体验证 72 条（视频 61 oEmbed + 文献 11 PMID）· 失败 0
-✓ 端到端冒烟 112 项，失败 0  ✓ 无障碍 axe 20 组合（10 页 × 深/浅 2 主题）violations = 0
+✓ 端到端冒烟 117 项，失败 0  ✓ 无障碍 axe 20 组合（10 页 × 深/浅 2 主题）violations = 0
 合计 11 项检查 · 失败 0 项 · 全绿
 ```
 
@@ -190,13 +191,13 @@ node tools/set-domain.mjs https://your-domain.com   # 一次性：canonical / og
 ```
 
 - **排除** `docs/`、`tools/`、`partials/`、`.github/`（robots.txt 已 Disallow 前两者；静态托管另加忽略清单）；站点本体实测 **约 460KB**（10 个 HTML + assets）。
-- `og:image` 由构建层写成绝对 URL（`set-domain` 后自动指向新域名）；建议换成 1200×630 的独立分享图。
+- `og:image` 由构建层写成绝对 URL（`set-domain` 后自动指向新域名），图为 1200×630 的 `assets/img/og.png`（改样式后 `npm run og` 重新生成）。
 - Service Worker 只在 http(s) 下注册，部署后「安装到桌面」可离线打开；`sw.js` 里的 `VERSION` 由 `npm run build` 从 `package.json` 的版本号自动同步（不用手改，忘了也不会出现「改了站点但缓存还是旧的」）。
 - `.github/workflows/verify.yml` 在 push/PR 跑门禁，并在**每月 1 日**自动复检外链（链接腐烂是静态站最大的长期风险）。
 
 ## 版本与发布
 
-- 当前版本 **1.0.0**：`package.json`、`sw.js` 的 `VERSION`、git tag 三处一致。
+- 当前版本 **1.1.0**：`package.json`、`sw.js` 的 `VERSION`、git tag 三处一致。
   1.0.0 之前是 5 轮内部迭代（内部计数 v14 → v18），记录留在 `CHANGELOG.md` 的「开发期迭代记录」里。
 - **日常维护流程（改哪里 → 跑什么 → 怎么发版）见 [`docs/MAINTENANCE.md`](docs/MAINTENANCE.md)。**
 - 变更记录见 [`CHANGELOG.md`](CHANGELOG.md)（按版本列「新增 / 变更 / 修复」）。
@@ -210,7 +211,7 @@ node tools/set-domain.mjs https://your-domain.com   # 一次性：canonical / og
 | `detail.html` 的 60 个动作共用一个静态 `<title>`，爬虫看到的不是具体动作名 | 要让每个动作各有标题得生成 60 个静态页，对个人站不划算。站内导航与分享不受影响（渲染后会改写 `document.title`） |
 | `app.js`（约 110KB）/ `style.css`（约 50KB）仍是单文件 | `file://` 双击场景没有网络延迟，拆包只增加构建复杂度；改功能的入口早已按页分好区 |
 | 教学视频是英文 YouTube，不是中文 | 能稳定验证（oEmbed 返回标题与频道）的中文视频源拿不到同等结构化接口；所以每个动作**同时**给「在 B 站搜这个动作」直达，中文用户有等价入口 |
-| `canonical` 与 `sitemap` 用 `https://example.com` 占位 | 没有真实域名之前不编造，`node tools/set-domain.mjs <域名>` 一次替换全部 |
+| `canonical` / `sitemap` / `og:image` 目前指向 GitHub Pages（`ou-opr.github.io/iron-gravity`） | 自有域名前先用仓库页；换域名时 `node tools/set-domain.mjs <域名>` 一次替换全部 |
 | 「注意人群」「退阶路径」是通用训练提示 | 不做个体化筛查、不做医学判断，这是既定边界 |
 
 ## 版权与免责

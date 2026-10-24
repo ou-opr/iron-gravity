@@ -79,10 +79,10 @@
 | `art/atlas_extract.mjs / atlas_list.mjs / atlas_probe.mjs` | 一次性开发脚本 | 抽取 @emmorts 数据用（跑过即退役，`
 
 可在任何**新**终端随时重跑取证） |
-| `art/build_sheet.py / contact_sheet.py / shrink_sheet.py / crop_row.py / crop_rows.py / tall_split.py` | 审图工具 | 拼图/缩小/切列（vision 限额配合用；`crop_rows.py` 为按行截图裁剪） |
+| `art/build_sheet.py / contact_sheet.py / shrink_sheet.py` | 审图工具 | 拼图/缩小/切列（vision 限额配合用）；`crop_row.py / crop_rows.py / tall_split.py` 已于 v1.1.0 退役移出（原文在 git 历史 v1.0.0 tag：一次性裁切辅助，路径直进 PIL 的写法过不了本地安全门禁，且 R1–R4 复核已完成） |
 | `art/map_check.mjs / map_templates.mjs / export_ids.mjs / export_panels.mjs / exercises.json / template-map.json` | 图示数据 | 映射校验与导出（60/60 覆盖 + 0 非法 id） |
 | **线稿自检自评循环（v10）** | 流程 | ① `frames-only.html` 截图 → ② `tall_split.py` 切列控高 → ③ `vision_analyze` 按「人体形态/姿势/器械/线条质感 ×10 分制」逐格打分 → ④ 重绘最低分项（共享件：`head()` 椭圆头+下颌、`limb()` 双线肢体、`pad()` 圆角垫、`stack()` 配重片组、`pulley()`/`cable()` 滑轮缆绳、`plate2()` 杠铃片、`foot()`）→ ⑤ 再截图再评，直至均分达标。**已完成 R1–R4 全量 23/23 模板**（均分轨迹：基线 6.75 → R1 6.78 → R2 8.2 → R3 7.78 → R4 7.80；跨轮分数仅在同尺度下可比） |
-| `art/gen_art.py / gen-log.jsonl / list_ids.py` | 退役管线 | 魔搭 AI 生成管线（技能可复用，站点不再依赖其产物） |
+| `art/gen-log.jsonl / list_ids.py` | 退役管线 | 魔搭 AI 生成管线（技能可复用，站点不再依赖其产物）；`gen_art.py` 已于 v1.1.0 退役移出（原文在 git 历史 v1.0.0 tag：动态下载/数据派生路径过不了本地安全门禁，且无复跑需求） |
 | `docs/legacy/*.html`（原 `tools/art/dev/`） | **退役演示页归档** | v5–v7 的图示方案对比样板（线稿 POC / atlas 12 格 / 帧模板 / 23 模板样张），不参与站点与任何脚本；路径已按新位置修正，见 `docs/legacy/README.md` |
 | `link-report.json` | 检查产物 | check-links 的输出样本 |
 

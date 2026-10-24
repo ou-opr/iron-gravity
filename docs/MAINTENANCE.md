@@ -1,18 +1,17 @@
 # 维护手册 · MAINTENANCE
 
-> **基线：v1.0.0（2026-10-18）**。仓库历史从这个提交起算，之前的内部迭代已按发布需要重置。
+> **基线：v1.1.0（2026-10-24）**。仓库历史自 v1.0.0 重置起算，之后每次发版追加提交。
 > 本文档说明「日常改什么、跑什么门禁、怎么发版、什么需要定期看」。
 
 ## 一、基线数字
 
-| 项 | v1.0.0 |
+| 项 | v1.1.0 |
 |---|---|
-| 提交 | 1 个（`铁引力 IRON GRAVITY 1.0.0`） |
-| 跟踪文件 | 171 |
-| `.git` | 582 KB |
+| 跟踪文件 | 175 |
+| `.git` | 约 950 KB |
 | 页面 | 10 |
 | 内容规模 | 60 动作 · 6 计划 · 8 主张 × 11 文献 · 60 注意人群 · 23 退阶 · 61 条教学视频 |
-| 回归链 | 11 项（冒烟 112 项 · axe 20 组合 = 10 页 × 深/浅） |
+| 回归链 | 11 项（单测 37 项 · 冒烟 117 项 · axe 20 组合 = 10 页 × 深/浅） |
 | 线上 | https://ou-opr.github.io/iron-gravity/ |
 
 ## 二、日常改动：改哪里 → 跑什么
@@ -47,14 +46,14 @@ npm run build
 
 # 2) 更新 CHANGELOG.md（只写「新增 / 变更 / 修复」，别写流水账）
 # 3) 提交
-git add -A && git commit -m "release: v1.1.0"
+git add -A && git commit -m "release: v1.2.0"
 
 # 4) 打 annotated tag 并推送
-git tag -a v1.1.0 -m "iron gravity 1.1.0"
+git tag -a v1.2.0 -m "iron gravity 1.2.0"
 git push origin main --follow-tags
 
 # 5) 建 Release（body 写文件，别塞进命令行）
-gh release create v1.1.0 --title "1.1.0" --notes-file notes.md --verify-tag
+gh release create v1.2.0 --title "1.2.0" --notes-file notes.md --verify-tag
 ```
 
 - **不要**用 `gh release delete --cleanup-tag`：它会连本地 tag 一起删，之后 `git push origin <tag>` 会报 `src refspec does not match any`。
